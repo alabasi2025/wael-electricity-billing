@@ -133,4 +133,56 @@ export class ElectricityWorkflowService {
   getLegacyCenters(): Observable<any> { return this.api.get('electricity/centers'); }
   getLegacyGenerators(params?: any): Observable<any> { return this.api.get('electricity/generators', { params }); }
   getLegacyInstallations(params?: any): Observable<any> { return this.api.get('electricity/installations', { params }); }
+
+  // ══════════════════════════════════════════
+  // الطباعة (5 أنواع)
+  // ══════════════════════════════════════════
+  getPrintInvoiceUrl(invoiceId: number): string { return `/api/electricity/print/invoice/${invoiceId}`; }
+  getPrintReceiptUrl(invoiceId: number, amount: number): string { return `/api/electricity/print/receipt/${invoiceId}?amount=${amount}`; }
+  getPrintStatementUrl(noa: number): string { return `/api/electricity/print/statement/${noa}`; }
+  getPrintDailyUrl(date: string): string { return `/api/electricity/print/daily-report?date=${date}`; }
+  getPrintMonthlyUrl(month: number, year: number): string { return `/api/electricity/print/monthly-billing?month=${month}&year=${year}`; }
+
+  // ══════════════════════════════════════════
+  // سندات الشبكة
+  // ══════════════════════════════════════════
+  getNetworkStats(): Observable<any> { return this.api.get('electricity/network/stats'); }
+  getNetworkVouchers(status?: number): Observable<any> { return this.api.get(`electricity/network/vouchers${status !== undefined ? '?status=' + status : ''}`); }
+  createNetworkVoucher(data: any): Observable<any> { return this.api.post('electricity/network/vouchers', data); }
+  confirmNetworkVoucher(id: number): Observable<any> { return this.api.post(`electricity/network/vouchers/${id}/confirm`, {}); }
+  postNetworkVoucher(id: number): Observable<any> { return this.api.post(`electricity/network/vouchers/${id}/post`, {}); }
+  getCashboxes(): Observable<any> { return this.api.get('electricity/network/cashboxes'); }
+  createCashbox(name: string): Observable<any> { return this.api.post('electricity/network/cashboxes', { name }); }
+  getVoucherArchive(noa?: number): Observable<any> { return this.api.get(`electricity/network/archive${noa ? '?noa=' + noa : ''}`); }
+  createSettlement(data: any): Observable<any> { return this.api.post('electricity/network/settlements', data); }
+  getSettlements(noa?: number): Observable<any> { return this.api.get(`electricity/network/settlements${noa ? '?noa=' + noa : ''}`); }
+  approveSettlement(id: number): Observable<any> { return this.api.post(`electricity/network/settlements/${id}/approve`, {}); }
+
+  // ══════════════════════════════════════════
+  // ربط السندات بالفواتير
+  // ══════════════════════════════════════════
+  linkVoucherToInvoice(voucherNos: number, invoiceId: number, amount: number): Observable<any> { return this.api.post('electricity/billing/link-voucher', { voucherNos, invoiceId, amount }); }
+  autoPayFromVoucher(subscriberNoa: number, totalAmount: number, voucherNos: number): Observable<any> { return this.api.post('electricity/billing/auto-pay', { subscriberNoa, totalAmount, voucherNos }); }
+  findLinkableInvoices(noa: number): Observable<any> { return this.api.get(`electricity/billing/linkable-invoices/${noa}`); }
+
+  // ══════════════════════════════════════════
+  // تقارير متقدمة
+  // ══════════════════════════════════════════
+  getDetailedStatement(noa: number): Observable<any> { return this.api.get(`electricity/reports/detailed-statement/${noa}`); }
+  getCollectorReport(collectorId?: number): Observable<any> { return this.api.get(`electricity/reports/collector${collectorId ? '?collectorId=' + collectorId : ''}`); }
+  getCenterReport(centerId?: number): Observable<any> { return this.api.get(`electricity/reports/center${centerId ? '?centerId=' + centerId : ''}`); }
+  getMonthlyComparisonReport(year: number): Observable<any> { return this.api.get(`electricity/reports/monthly-comparison?year=${year}`); }
+  getNetworkReport(): Observable<any> { return this.api.get('electricity/reports/network'); }
+
+  // ══════════════════════════════════════════
+  // الصلاحيات
+  // ══════════════════════════════════════════
+  getRoles(): Observable<any> { return this.api.get('permissions/roles'); }
+  getPermissions(): Observable<any> { return this.api.get('permissions/permissions'); }
+  getRolePermissions(roleId: number): Observable<any> { return this.api.get(`permissions/roles/${roleId}/permissions`); }
+  assignPermToRole(roleId: number, permId: number): Observable<any> { return this.api.post(`permissions/roles/${roleId}/permissions/${permId}`, {}); }
+  removePermFromRole(roleId: number, permId: number): Observable<any> { return this.api.delete(`permissions/roles/${roleId}/permissions/${permId}`); }
+  getUserPerms(userId: number): Observable<any> { return this.api.get(`permissions/users/${userId}`); }
+  getUserMenu(userId: number): Observable<any> { return this.api.get(`permissions/menu/${userId}`); }
+  getSmsGatewayStatus(): Observable<any> { return this.api.get('electricity/messages/gateway-status'); }
 }
