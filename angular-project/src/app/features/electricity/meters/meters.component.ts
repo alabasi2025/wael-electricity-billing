@@ -1,161 +1,68 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
-import {
-  ElectricityMeterRecord,
-  ElectricityWorkflowService,
-} from '../../../core/services/electricity-workflow.service';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ElectricityWorkflowService } from '../../../core/services/electricity-workflow.service';
 import { electricityPageStyles } from '../electricity-page.styles';
 
 @Component({
   selector: 'app-meters',
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterModule,
-    MatButtonModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatProgressSpinnerModule,
-    MatTableModule,
-  ],
+  imports: [CommonModule, FormsModule, MatButtonModule, MatCardModule, MatIconModule, MatTableModule, MatSnackBarModule, MatFormFieldModule, MatInputModule, MatTooltipModule],
   template: `
     <div class="electricity-page" dir="rtl">
       <section class="hero">
         <div class="hero-copy">
-          <span class="hero-kicker">MZ</span>
-          <h1>سجل العدادات</h1>
-          <p>الملف المرجعي للعدادات وربطها بالمشتركين والموقع وحالة التشغيل والقراءة الحالية.</p>
-          <div class="hero-actions">
-            <a mat-flat-button routerLink="/electricity/readings">تسجيل قراءة</a>
-            <a mat-stroked-button routerLink="/electricity/subscribers">ملف المشتركين</a>
-          </div>
-        </div>
-        <div class="hero-side">
-          <div class="metric-row">
-            <span>إجمالي العدادات المعروضة</span>
-            <strong>{{ meters().length }}</strong>
-          </div>
-          <div class="metric-row">
-            <span>عدادات فعالة</span>
-            <strong>{{ activeCount() }}</strong>
-          </div>
-          <div class="metric-row">
-            <span>مرتبطة بمشترك</span>
-            <strong>{{ linkedCount() }}</strong>
-          </div>
+          <span class="hero-kicker">MZ + TRK / سجل العدادات</span>
+          <h1>إدارة العدادات</h1>
+          <p>سجل العدادات الكهربائية مع تتبع التغييرات والتركيبات.</p>
         </div>
       </section>
-
-      <section class="panel">
-        <div class="toolbar-row">
-          <mat-form-field appearance="outline" class="search-field">
-            <mat-label>بحث</mat-label>
-            <input matInput [(ngModel)]="searchTerm" (keyup.enter)="loadMeters()" placeholder="رقم العداد أو اسم المشترك" />
-            <button matSuffix mat-icon-button type="button" (click)="loadMeters()">
-              <mat-icon>search</mat-icon>
-            </button>
-          </mat-form-field>
-
-          <button mat-button (click)="loadMeters()">تحديث</button>
-        </div>
-
-        @if (loading()) {
-          <div class="empty-state">
-            <mat-spinner diameter="40"></mat-spinner>
-          </div>
-        } @else if (!meters().length) {
-          <div class="empty-state">لا توجد عدادات مطابقة.</div>
-        } @else {
-          <div class="table-wrap">
-            <table mat-table [dataSource]="meters()" class="data-table">
-              <ng-container matColumnDef="meterNumber">
-                <th mat-header-cell *matHeaderCellDef>رقم العداد</th>
-                <td mat-cell *matCellDef="let row">{{ row.meterNumber }}</td>
-              </ng-container>
-              <ng-container matColumnDef="subscriberName">
-                <th mat-header-cell *matHeaderCellDef>المشترك</th>
-                <td mat-cell *matCellDef="let row">{{ row.subscriberName || 'غير مرتبط' }}</td>
-              </ng-container>
-              <ng-container matColumnDef="location">
-                <th mat-header-cell *matHeaderCellDef>الموقع</th>
-                <td mat-cell *matCellDef="let row">{{ row.location || '-' }}</td>
-              </ng-container>
-              <ng-container matColumnDef="reading">
-                <th mat-header-cell *matHeaderCellDef>القراءة</th>
-                <td mat-cell *matCellDef="let row">{{ row.reading ?? 0 }}</td>
-              </ng-container>
-              <ng-container matColumnDef="status">
-                <th mat-header-cell *matHeaderCellDef>الحالة</th>
-                <td mat-cell *matCellDef="let row">
-                  <span class="status-pill" [class.warning-pill]="row.status !== 1">
-                    {{ row.status === 1 ? 'فعال' : 'غير فعال' }}
-                  </span>
-                </td>
-              </ng-container>
-              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-            </table>
-          </div>
-        }
-      </section>
+      <mat-card style="margin:1rem 0;padding:1.5rem">
+        <h3><mat-icon>settings_input_antenna</mat-icon> سجل العدادات</h3>
+        <table mat-table [dataSource]="meters()" style="width:100%">
+          <ng-container matColumnDef="id"><th mat-header-cell *matHeaderCellDef>#</th><td mat-cell *matCellDef="let r">{{r.id}}</td></ng-container>
+          <ng-container matColumnDef="meterNumber"><th mat-header-cell *matHeaderCellDef>رقم العداد</th><td mat-cell *matCellDef="let r">{{r.meterNumber}}</td></ng-container>
+          <ng-container matColumnDef="subscriberName"><th mat-header-cell *matHeaderCellDef>المشترك</th><td mat-cell *matCellDef="let r">{{r.subscriberName || '-'}}</td></ng-container>
+          <ng-container matColumnDef="reading"><th mat-header-cell *matHeaderCellDef>القراءة</th><td mat-cell *matCellDef="let r">{{r.reading}}</td></ng-container>
+          <ng-container matColumnDef="prevReading"><th mat-header-cell *matHeaderCellDef>السابقة</th><td mat-cell *matCellDef="let r">{{r.prevReading}}</td></ng-container>
+          <ng-container matColumnDef="status"><th mat-header-cell *matHeaderCellDef>الحالة</th><td mat-cell *matCellDef="let r">
+            <mat-icon [style.color]="r.status===1?'#4caf50':'#f44336'">{{r.status===1?'check_circle':'cancel'}}</mat-icon>
+          </td></ng-container>
+          <tr mat-header-row *matHeaderRowDef="['id','meterNumber','subscriberName','reading','prevReading','status']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['id','meterNumber','subscriberName','reading','prevReading','status'];"></tr>
+        </table>
+        <p *ngIf="!meters()?.length" style="text-align:center;color:#999;padding:2rem">لا توجد عدادات مسجلة. يتم ربط العدادات تلقائياً عند إنشاء المشتركين.</p>
+      </mat-card>
+      <mat-card style="margin:1rem 0;padding:1.5rem">
+        <h3><mat-icon>swap_horiz</mat-icon> سجل تغيير العدادات</h3>
+        <table mat-table [dataSource]="changes()" style="width:100%">
+          <ng-container matColumnDef="subscriberNoa"><th mat-header-cell *matHeaderCellDef>المشترك</th><td mat-cell *matCellDef="let r">{{r.subscriberNoa}}</td></ng-container>
+          <ng-container matColumnDef="oldMeterNo"><th mat-header-cell *matHeaderCellDef>القديم</th><td mat-cell *matCellDef="let r">{{r.oldMeterNo}}</td></ng-container>
+          <ng-container matColumnDef="newMeterNo"><th mat-header-cell *matHeaderCellDef>الجديد</th><td mat-cell *matCellDef="let r">{{r.newMeterNo}}</td></ng-container>
+          <ng-container matColumnDef="changeDate"><th mat-header-cell *matHeaderCellDef>التاريخ</th><td mat-cell *matCellDef="let r">{{r.changeDate | date:'shortDate'}}</td></ng-container>
+          <ng-container matColumnDef="reason"><th mat-header-cell *matHeaderCellDef>السبب</th><td mat-cell *matCellDef="let r">{{r.reason || '-'}}</td></ng-container>
+          <tr mat-header-row *matHeaderRowDef="['subscriberNoa','oldMeterNo','newMeterNo','changeDate','reason']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['subscriberNoa','oldMeterNo','newMeterNo','changeDate','reason'];"></tr>
+        </table>
+        <p *ngIf="!changes()?.length" style="text-align:center;color:#999;padding:1rem">لا توجد تغييرات مسجلة</p>
+      </mat-card>
     </div>
   `,
-  styles: [
-    electricityPageStyles,
-    `
-      .hero-actions a[mat-flat-button] {
-        background: #ffd54f;
-        color: #102542;
-      }
-    `,
-  ],
+  styles: [electricityPageStyles],
 })
 export class MetersComponent implements OnInit {
-  displayedColumns = ['meterNumber', 'subscriberName', 'location', 'reading', 'status'];
-
-  meters = signal<ElectricityMeterRecord[]>([]);
-  loading = signal(true);
-  searchTerm = '';
-
-  constructor(private workflowService: ElectricityWorkflowService) {}
-
-  ngOnInit(): void {
-    this.loadMeters();
-  }
-
-  loadMeters(): void {
-    this.loading.set(true);
-    this.workflowService
-      .getMeters({
-        page: 1,
-        pageSize: 25,
-        search: this.searchTerm.trim() || undefined,
-      })
-      .subscribe({
-        next: (response) => {
-          this.meters.set(response.data);
-          this.loading.set(false);
-        },
-        error: () => this.loading.set(false),
-      });
-  }
-
-  activeCount(): number {
-    return this.meters().filter((meter) => meter.status === 1).length;
-  }
-
-  linkedCount(): number {
-    return this.meters().filter((meter) => !!meter.subscriberName).length;
+  meters = signal<any[]>([]);
+  changes = signal<any[]>([]);
+  constructor(private svc: ElectricityWorkflowService) {}
+  ngOnInit() {
+    this.svc.getLegacyMeters({ pageSize: 100 }).subscribe(r => this.meters.set(r.data || []));
+    this.svc.getMeterChanges().subscribe(r => this.changes.set(r.data || []));
   }
 }

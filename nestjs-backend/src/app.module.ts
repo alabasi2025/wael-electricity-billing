@@ -24,6 +24,7 @@ import { ElectricityModule } from './electricity/electricity.module';
 import { SettingsFinancialModule } from './settings/settings.module';
 import { ReportsModule } from './reports/reports.module';
 import { LegacyModule } from './legacy/legacy.module';
+import { PermissionsModule } from './permissions/permissions.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { LegacyModule } from './legacy/legacy.module';
     SettingsFinancialModule, // الإعدادات + المالية + المذكرات + SMS + الميزانية
     ReportsModule,           // التقارير الشاملة
     LegacyModule,            // كل الجداول المتبقية (98 جدول) من النسخة الاحتياطية
+    PermissionsModule,       // الأدوار والصلاحيات والقوائم الديناميكية
   ],
   providers: [
     // Global Exception Filter

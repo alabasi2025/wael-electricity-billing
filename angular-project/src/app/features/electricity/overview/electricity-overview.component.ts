@@ -5,290 +5,132 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import {
-  ElectricityStats,
-  ElectricityWorkflowService,
-} from '../../../core/services/electricity-workflow.service';
+import { ElectricityWorkflowService } from '../../../core/services/electricity-workflow.service';
 import { electricityPageStyles } from '../electricity-page.styles';
 
 @Component({
   selector: 'app-electricity-overview',
-  imports: [
-    CommonModule,
-    RouterModule,
-    MatButtonModule,
-    MatCardModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-  ],
+  imports: [CommonModule, RouterModule, MatButtonModule, MatCardModule, MatIconModule, MatProgressSpinnerModule],
   template: `
     <div class="electricity-page" dir="rtl">
       <section class="hero">
         <div class="hero-copy">
-          <span class="hero-kicker">Legacy Electricity Workflow</span>
-          <h1>خريطة العمل الكهربائية من المشترك حتى السداد</h1>
-          <p>
-            هذا القسم يعيد ترتيب النظام الجديد حول الدورة الفعلية في النظام القديم:
-            ملف المشترك، القراءة، الفوترة، الترحيل، السداد، الرسائل، ثم التقارير.
-          </p>
-          <div class="hero-actions">
-            <a mat-flat-button routerLink="/electricity/subscribers">ملف المشتركين</a>
-            <a mat-stroked-button routerLink="/electricity/readings">بدء القراءة</a>
-            <a mat-stroked-button routerLink="/electricity/billing">فتح الفوترة</a>
-          </div>
-        </div>
-
-        <div class="hero-side">
-          <div class="metric-row">
-            <span>المسار الافتراضي</span>
-            <strong>tel → addmz → ftora → thoel → sndk22</strong>
-          </div>
-          <div class="metric-row">
-            <span>نقطة البداية اليومية</span>
-            <strong>بيانات المشتركين والقراءات</strong>
-          </div>
-          <div class="metric-row">
-            <span>الوضع الحالي</span>
-            <strong>{{ loading() ? 'جاري تحميل الإحصاءات...' : 'جاهز للعمل' }}</strong>
-          </div>
+          <span class="hero-kicker">لوحة التحكم الكهربائية</span>
+          <h1>دورة العمل الكهربائية</h1>
+          <p>نظرة شاملة على كل مراحل دورة الكهرباء: من تسجيل المشترك حتى التحصيل والتقارير.</p>
         </div>
       </section>
 
-      @if (loading()) {
-        <section class="panel empty-state">
-          <mat-spinner diameter="42"></mat-spinner>
-        </section>
-      } @else {
-        <section class="stats-grid">
-          @for (card of statCards(); track card.label) {
-            <mat-card class="stat-card">
-              <div class="stat-head">
-                <div>
-                  <span>{{ card.label }}</span>
-                  <strong>{{ card.value }}</strong>
-                </div>
-                <mat-icon>{{ card.icon }}</mat-icon>
-              </div>
-              <span>{{ card.caption }}</span>
-            </mat-card>
-          }
-        </section>
-      }
-
-      <section class="panel">
-        <div class="toolbar-row">
-          <div>
-            <h2 class="section-title">
-              <mat-icon>account_tree</mat-icon>
-              شاشات الكهرباء الأساسية
-            </h2>
-            <p class="muted">ترتيب مطابق تقريبًا لتسلسل العمل في النظام القديم.</p>
-          </div>
+      <!-- بطاقات الإحصائيات -->
+      <div class="stats-grid">
+        <div class="stat-card blue" (click)="navigate('/electricity/subscribers')">
+          <mat-icon>people</mat-icon>
+          <div class="stat-info"><span>المشتركين</span><strong>{{subStats()?.total || 0}}</strong></div>
+          <div class="stat-sub">نشط: {{subStats()?.active || 0}} | مفصول: {{subStats()?.disconnected || 0}}</div>
         </div>
-
-        <div class="workflow-grid">
-          @for (step of workflow; track step.route) {
-            <a class="workflow-card" [routerLink]="step.route">
-              <span class="legacy-tag">
-                <mat-icon>{{ step.icon }}</mat-icon>
-                {{ step.legacy }}
-              </span>
-              <strong>{{ step.title }}</strong>
-              <span>{{ step.description }}</span>
-            </a>
-          }
+        <div class="stat-card orange" (click)="navigate('/electricity/readings')">
+          <mat-icon>speed</mat-icon>
+          <div class="stat-info"><span>القراءات</span><strong>{{readStats()?.totalReadings || 0}}</strong></div>
+          <div class="stat-sub">دورات مفتوحة: {{readStats()?.openCycles || 0}} | شاذة: {{readStats()?.anomalies || 0}}</div>
         </div>
-      </section>
+        <div class="stat-card green" (click)="navigate('/electricity/billing')">
+          <mat-icon>receipt</mat-icon>
+          <div class="stat-info"><span>الفواتير</span><strong>{{billStats()?.totalInvoices || 0}}</strong></div>
+          <div class="stat-sub">مفوتر: {{(billStats()?.totalBilled || 0) | number}} | تحصيل: {{billStats()?.collectionRate || 0}}%</div>
+        </div>
+        <div class="stat-card red" (click)="navigate('/electricity/billing')">
+          <mat-icon>money_off</mat-icon>
+          <div class="stat-info"><span>غير مسدد</span><strong>{{(billStats()?.totalUnpaid || 0) | number}}</strong></div>
+          <div class="stat-sub">فواتير: {{billStats()?.unpaidInvoices || 0}}</div>
+        </div>
+        <div class="stat-card purple" (click)="navigate('/electricity/messages')">
+          <mat-icon>sms</mat-icon>
+          <div class="stat-info"><span>الرسائل</span><strong>{{msgStats()?.sent || 0}}</strong></div>
+          <div class="stat-sub">معلقة: {{msgStats()?.pending || 0}} | فشل: {{msgStats()?.failed || 0}}</div>
+        </div>
+        <div class="stat-card teal" (click)="navigate('/electricity/reports')">
+          <mat-icon>analytics</mat-icon>
+          <div class="stat-info"><span>المديونية</span><strong>{{(subStats()?.totalDebt || 0) | number}}</strong></div>
+          <div class="stat-sub">مدينين: {{subStats()?.debtors || 0}}</div>
+        </div>
+      </div>
 
-      <div class="panel-grid">
-        <section class="panel">
-          <h2 class="section-title">
-            <mat-icon>category</mat-icon>
-            الشاشات المساندة
-          </h2>
-          <div class="action-grid">
-            @for (screen of supportScreens; track screen.route) {
-              <a class="action-tile" [routerLink]="screen.route">
-                <mat-icon>{{ screen.icon }}</mat-icon>
-                <strong>{{ screen.title }}</strong>
-                <span>{{ screen.description }}</span>
-              </a>
-            }
-          </div>
-        </section>
+      <!-- خريطة دورة العمل -->
+      <mat-card style="margin:1.5rem 0;padding:2rem">
+        <h2 style="text-align:center;margin-bottom:1.5rem"><mat-icon>account_tree</mat-icon> خريطة دورة العمل الكهربائية</h2>
+        <div class="workflow-map">
+          <a class="wf-step" routerLink="/electricity/subscribers"><div class="wf-icon blue-bg"><mat-icon>person_add</mat-icon></div><span>1. تسجيل مشترك</span><small>48 حقل كامل</small></a>
+          <div class="wf-arrow">→</div>
+          <a class="wf-step" routerLink="/electricity/meters"><div class="wf-icon cyan-bg"><mat-icon>settings_input_antenna</mat-icon></div><span>2. تركيب عداد</span><small>MZ + TRKB</small></a>
+          <div class="wf-arrow">→</div>
+          <a class="wf-step" routerLink="/electricity/readings"><div class="wf-icon orange-bg"><mat-icon>speed</mat-icon></div><span>3. إدخال قراءة</span><small>دورة + استهلاك</small></a>
+          <div class="wf-arrow">→</div>
+          <a class="wf-step" routerLink="/electricity/billing"><div class="wf-icon green-bg"><mat-icon>receipt_long</mat-icon></div><span>4. إصدار فاتورة</span><small>شرائح + رسوم</small></a>
+          <div class="wf-arrow">→</div>
+          <a class="wf-step" routerLink="/electricity/billing"><div class="wf-icon indigo-bg"><mat-icon>publish</mat-icon></div><span>5. ترحيل</span><small>قيود محاسبية</small></a>
+          <div class="wf-arrow">→</div>
+          <a class="wf-step" routerLink="/electricity/billing"><div class="wf-icon purple-bg"><mat-icon>payments</mat-icon></div><span>6. تحصيل</span><small>سداد الفواتير</small></a>
+          <div class="wf-arrow">→</div>
+          <a class="wf-step" routerLink="/electricity/reports"><div class="wf-icon red-bg"><mat-icon>analytics</mat-icon></div><span>7. تقارير</span><small>8 تقارير</small></a>
+          <div class="wf-arrow">→</div>
+          <a class="wf-step" routerLink="/electricity/messages"><div class="wf-icon teal-bg"><mat-icon>sms</mat-icon></div><span>8. رسائل</span><small>SMS/WhatsApp</small></a>
+        </div>
+      </mat-card>
 
-        <section class="panel">
-          <h2 class="section-title">
-            <mat-icon>info</mat-icon>
-            ماذا أنجزنا هنا؟
-          </h2>
-          <div class="metric-list">
-            <div class="metric-row">
-              <span>المشتركون</span>
-              <strong>مرتبطة مع المسار accounts/sub ونوع 2</strong>
-            </div>
-            <div class="metric-row">
-              <span>العدادات والقراءات</span>
-              <strong>مرتبطة مع المسار electricity/meters</strong>
-            </div>
-            <div class="metric-row">
-              <span>الفوترة والسداد</span>
-              <strong>تعرض بيانات legacy من dataffx و sndk22</strong>
-            </div>
-          </div>
-
-          <div class="note-box">
-            الشاشات الجديدة هنا هي بداية تنظيم قسم الكهرباء حول الوظائف القديمة الفعلية،
-            وليست مجرد قوائم عامة للعدادات والمولدات.
-          </div>
-        </section>
+      <!-- روابط سريعة -->
+      <div class="quick-links">
+        <a mat-stroked-button routerLink="/electricity/subscribers"><mat-icon>people</mat-icon> المشتركين</a>
+        <a mat-stroked-button routerLink="/electricity/readings"><mat-icon>speed</mat-icon> القراءات</a>
+        <a mat-stroked-button routerLink="/electricity/billing"><mat-icon>receipt</mat-icon> الفوترة</a>
+        <a mat-stroked-button routerLink="/electricity/collections"><mat-icon>payments</mat-icon> التحصيل</a>
+        <a mat-stroked-button routerLink="/electricity/meters"><mat-icon>settings_input_antenna</mat-icon> العدادات</a>
+        <a mat-stroked-button routerLink="/electricity/centers"><mat-icon>business</mat-icon> المراكز</a>
+        <a mat-stroked-button routerLink="/electricity/reports"><mat-icon>analytics</mat-icon> التقارير</a>
+        <a mat-stroked-button routerLink="/electricity/messages"><mat-icon>sms</mat-icon> الرسائل</a>
       </div>
     </div>
   `,
-  styles: [
-    electricityPageStyles,
-    `
-      .hero-actions a[mat-flat-button] {
-        background: #ffd54f;
-        color: #102542;
-      }
-    `,
-  ],
+  styles: [electricityPageStyles, `
+    .stats-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin:1.5rem 0; }
+    .stat-card { display:flex;flex-wrap:wrap;align-items:center;gap:1rem;padding:1.5rem;border-radius:12px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.08);cursor:pointer;transition:transform 0.2s;border-right:4px solid #ccc; }
+    .stat-card:hover { transform:translateY(-3px);box-shadow:0 4px 16px rgba(0,0,0,0.12); }
+    .stat-card.blue { border-color:#2196f3; } .stat-card.orange { border-color:#ff9800; }
+    .stat-card.green { border-color:#4caf50; } .stat-card.red { border-color:#f44336; }
+    .stat-card.purple { border-color:#9c27b0; } .stat-card.teal { border-color:#009688; }
+    .stat-card mat-icon { font-size:36px;width:36px;height:36px;color:#666; }
+    .stat-info { display:flex;flex-direction:column; }
+    .stat-info span { font-size:0.85rem;color:#888; }
+    .stat-info strong { font-size:1.8rem;font-weight:700; }
+    .stat-sub { width:100%;font-size:0.8rem;color:#999;border-top:1px solid #f0f0f0;padding-top:0.5rem; }
+
+    .workflow-map { display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:0.5rem; }
+    .wf-step { display:flex;flex-direction:column;align-items:center;text-decoration:none;color:#333;padding:0.5rem;border-radius:8px;transition:background 0.2s;min-width:90px; }
+    .wf-step:hover { background:#f5f5f5; }
+    .wf-icon { width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:0.3rem; }
+    .wf-icon mat-icon { color:#fff;font-size:24px;width:24px;height:24px; }
+    .blue-bg { background:#2196f3; } .cyan-bg { background:#00bcd4; } .orange-bg { background:#ff9800; }
+    .green-bg { background:#4caf50; } .indigo-bg { background:#3f51b5; } .purple-bg { background:#9c27b0; }
+    .red-bg { background:#f44336; } .teal-bg { background:#009688; }
+    .wf-step span { font-size:0.8rem;font-weight:600;text-align:center; }
+    .wf-step small { font-size:0.7rem;color:#999;text-align:center; }
+    .wf-arrow { font-size:1.5rem;color:#ccc;font-weight:bold; }
+
+    .quick-links { display:flex;flex-wrap:wrap;gap:0.75rem;margin:1rem 0;justify-content:center; }
+    .quick-links a { min-width:140px; }
+  `],
 })
 export class ElectricityOverviewComponent implements OnInit {
-  loading = signal(true);
-  stats = signal<ElectricityStats>({
-    meters: 0,
-    activeMeters: 0,
-    installations: 0,
-    generators: 0,
-    centers: 0,
-  });
+  subStats = signal<any>(null);
+  readStats = signal<any>(null);
+  billStats = signal<any>(null);
+  msgStats = signal<any>(null);
 
-  workflow = [
-    {
-      title: 'بيانات المشتركين',
-      description: 'ملف المشترك الكهربائي وربطه مع الحساب والاتصال والرصيد.',
-      legacy: 'TEL',
-      route: '/electricity/subscribers',
-      icon: 'people',
-    },
-    {
-      title: 'العدادات والقراءات',
-      description: 'تسجيل القراءة الحالية والسابقة واستهلاك الدورة.',
-      legacy: 'ADDMZ / TRK',
-      route: '/electricity/readings',
-      icon: 'speed',
-    },
-    {
-      title: 'الفوترة الشهرية',
-      description: 'معاينة سجلات الفوترة وحساب الاستهلاك ومبالغ الفواتير.',
-      legacy: 'FTORA',
-      route: '/electricity/billing',
-      icon: 'receipt_long',
-    },
-    {
-      title: 'الترحيل والاعتماد',
-      description: 'تثبيت الفواتير وترحيلها للقيود والسندات.',
-      legacy: 'THOEL',
-      route: '/electricity/posting',
-      icon: 'published_with_changes',
-    },
-    {
-      title: 'التحصيل والسداد',
-      description: 'ربط السداد بالفاتورة ومتابعة المقبوضات.',
-      legacy: 'SNDK22',
-      route: '/electricity/collections',
-      icon: 'payments',
-    },
-    {
-      title: 'الرسائل والمتابعة',
-      description: 'متابعة المدينين والإشعارات والرسائل النصية.',
-      legacy: 'REPMSM / MSM',
-      route: '/electricity/messages',
-      icon: 'sms',
-    },
-    {
-      title: 'تقارير الكهرباء',
-      description: 'خرائط التقرير اليومي والشهري وتقارير الطباعة القديمة.',
-      legacy: 'REPKH / REPDAY',
-      route: '/electricity/reports',
-      icon: 'assessment',
-    },
-  ];
-
-  supportScreens = [
-    {
-      title: 'سجل العدادات',
-      description: 'الملف التشغيلي الأساسي للعدادات.',
-      route: '/electricity/meters',
-      icon: 'pin',
-    },
-    {
-      title: 'التركيبات والتغييرات',
-      description: 'تركيب جديد، تغيير عداد، أو عمل ميداني.',
-      route: '/electricity/installations',
-      icon: 'construction',
-    },
-    {
-      title: 'المولدات',
-      description: 'المولدات وساعات التشغيل والوقود.',
-      route: '/electricity/generators',
-      icon: 'offline_bolt',
-    },
-    {
-      title: 'المراكز',
-      description: 'المراكز أو المناطق التشغيلية.',
-      route: '/electricity/centers',
-      icon: 'location_city',
-    },
-  ];
-
-  constructor(private workflowService: ElectricityWorkflowService) {}
-
-  ngOnInit(): void {
-    this.workflowService.getOverviewStats().subscribe({
-      next: (response) => {
-        this.stats.set(response.data);
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false),
-    });
+  constructor(private svc: ElectricityWorkflowService) {}
+  ngOnInit() {
+    this.svc.getSubscriberStats().subscribe(r => this.subStats.set(r.data));
+    this.svc.getReadingStats().subscribe(r => this.readStats.set(r.data));
+    this.svc.getBillingStats().subscribe(r => this.billStats.set(r.data));
+    this.svc.getMessageStats().subscribe(r => this.msgStats.set(r.data));
   }
-
-  statCards() {
-    const data = this.stats();
-    return [
-      {
-        label: 'إجمالي العدادات',
-        value: data.meters,
-        icon: 'speed',
-        caption: 'كل العدادات المسجلة داخل النظام الجديد.',
-      },
-      {
-        label: 'العدادات الفعالة',
-        value: data.activeMeters,
-        icon: 'bolt',
-        caption: 'العدادات العاملة والقابلة للقراءة.',
-      },
-      {
-        label: 'التركيبات',
-        value: data.installations,
-        icon: 'construction',
-        caption: 'عمليات التركيب أو التغيير أو الأعمال الميدانية.',
-      },
-      {
-        label: 'المولدات',
-        value: data.generators,
-        icon: 'power',
-        caption: 'سجل المولدات الداعم للتشغيل.',
-      },
-      {
-        label: 'المراكز',
-        value: data.centers,
-        icon: 'domain',
-        caption: 'المراكز أو المناطق التشغيلية.',
-      },
-    ];
-  }
+  navigate(path: string) { window.location.href = path; }
 }

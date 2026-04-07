@@ -1,192 +1,68 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
-import {
-  ElectricityWorkflowService,
-  LegacyPostingRecord,
-} from '../../../core/services/electricity-workflow.service';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ElectricityWorkflowService } from '../../../core/services/electricity-workflow.service';
 import { electricityPageStyles } from '../electricity-page.styles';
 
 @Component({
   selector: 'app-electricity-posting',
-  imports: [
-    CommonModule,
-    RouterModule,
-    MatButtonModule,
-    MatCardModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatTableModule,
-  ],
+  imports: [CommonModule, FormsModule, RouterModule, MatButtonModule, MatCardModule, MatIconModule, MatTableModule, MatSnackBarModule, MatFormFieldModule, MatInputModule, MatTooltipModule],
   template: `
     <div class="electricity-page" dir="rtl">
       <section class="hero">
         <div class="hero-copy">
-          <span class="hero-kicker">THOEL</span>
-          <h1>اعتماد وترحيل الفوترة</h1>
-          <p>
-            هذه الشاشة تعرض البيانات التي تمثل مرحلة تثبيت الفوترة وترحيلها إلى القيود
-            والحركات اللاحقة، وهي أقرب ما يقابل شاشة thoel في النظام القديم.
-          </p>
-          <div class="hero-actions">
-            <a mat-flat-button routerLink="/electricity/billing">العودة للفوترة</a>
-            <a mat-stroked-button routerLink="/electricity/collections">فتح السداد</a>
-          </div>
-        </div>
-
-        <div class="hero-side">
-          <div class="metric-row">
-            <span>عمليات الترحيل</span>
-            <strong>{{ rows().length }}</strong>
-          </div>
-          <div class="metric-row">
-            <span>إجمالي الترحيل</span>
-            <strong>{{ totalPosting() | number:'1.0-2' }}</strong>
-          </div>
-          <div class="metric-row">
-            <span>المبالغ النقدية</span>
-            <strong>{{ totalCash() | number:'1.0-2' }}</strong>
-          </div>
+          <span class="hero-kicker">THOEL / اعتماد وترحيل الفوترة</span>
+          <h1>ترحيل الفوترة</h1>
+          <p>اعتماد دورات الفوترة وترحيلها لإنشاء القيود المحاسبية وتحديث أرصدة المشتركين.</p>
         </div>
       </section>
 
-      @if (loading()) {
-        <section class="panel empty-state">
-          <mat-spinner diameter="42"></mat-spinner>
-        </section>
-      } @else {
-        <section class="summary-grid">
-          <mat-card class="stat-card">
-            <div class="stat-head">
-              <div>
-                <span>قيود محاسبية</span>
-                <strong>{{ linkedEntries() }}</strong>
-              </div>
-              <mat-icon>account_tree</mat-icon>
-            </div>
-            <span>عدد السجلات المرتبطة بقيود محاسبية.</span>
-          </mat-card>
-
-          <mat-card class="stat-card">
-            <div class="stat-head">
-              <div>
-                <span>سجلات محدثة</span>
-                <strong>{{ updatedRows() }}</strong>
-              </div>
-              <mat-icon>update</mat-icon>
-            </div>
-            <span>السجلات التي تحمل علم تحديث تشغيلي.</span>
-          </mat-card>
-        </section>
-      }
-
-      <section class="panel">
-        <div class="toolbar-row">
-          <div>
-            <h2 class="section-title">
-              <mat-icon>published_with_changes</mat-icon>
-              سجل الترحيل
-            </h2>
-            <p class="muted">المبالغ هنا تمثل ما تم تمريره من الفاتورة إلى القيود والسندات.</p>
-          </div>
-        </div>
-
-        @if (!rows().length && !loading()) {
-          <div class="empty-state">لا توجد بيانات ترحيل متاحة حاليًا.</div>
-        } @else {
-          <div class="table-wrap">
-            <table mat-table [dataSource]="rows()" class="data-table">
-              <ng-container matColumnDef="nos">
-                <th mat-header-cell *matHeaderCellDef>رقم الحركة</th>
-                <td mat-cell *matCellDef="let row">{{ row.nos || '-' }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="dates">
-                <th mat-header-cell *matHeaderCellDef>التاريخ</th>
-                <td mat-cell *matCellDef="let row">{{ row.dates || '-' }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="noa">
-                <th mat-header-cell *matHeaderCellDef>المشترك</th>
-                <td mat-cell *matCellDef="let row">{{ row.noa || '-' }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="totl">
-                <th mat-header-cell *matHeaderCellDef>الإجمالي</th>
-                <td mat-cell *matCellDef="let row" class="amount-positive">
-                  {{ row.totl ?? 0 | number:'1.0-2' }}
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="sara">
-                <th mat-header-cell *matHeaderCellDef>النقدي</th>
-                <td mat-cell *matCellDef="let row">{{ row.sara ?? 0 | number:'1.0-2' }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="nok">
-                <th mat-header-cell *matHeaderCellDef>القيد</th>
-                <td mat-cell *matCellDef="let row">{{ row.nok || '-' }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="memos">
-                <th mat-header-cell *matHeaderCellDef>البيان</th>
-                <td mat-cell *matCellDef="let row">{{ row.memos || row.nms || '-' }}</td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-            </table>
-          </div>
-        }
-      </section>
+      <mat-card style="margin:1rem 0;padding:1.5rem">
+        <h3><mat-icon>publish</mat-icon> دورات الفوترة المعتمدة للترحيل</h3>
+        <table mat-table [dataSource]="billingCycles()" style="width:100%">
+          <ng-container matColumnDef="cycleName"><th mat-header-cell *matHeaderCellDef>اسم الدورة</th><td mat-cell *matCellDef="let r">{{r.cycleName}}</td></ng-container>
+          <ng-container matColumnDef="period"><th mat-header-cell *matHeaderCellDef>الفترة</th><td mat-cell *matCellDef="let r">{{r.billingMonth}}/{{r.billingYear}}</td></ng-container>
+          <ng-container matColumnDef="totalInvoices"><th mat-header-cell *matHeaderCellDef>عدد الفواتير</th><td mat-cell *matCellDef="let r">{{r.totalInvoices}}</td></ng-container>
+          <ng-container matColumnDef="totalAmount"><th mat-header-cell *matHeaderCellDef>المبلغ الإجمالي</th><td mat-cell *matCellDef="let r" style="font-weight:bold">{{r.totalAmount | number}}</td></ng-container>
+          <ng-container matColumnDef="status"><th mat-header-cell *matHeaderCellDef>الحالة</th><td mat-cell *matCellDef="let r">
+            <span [style.color]="r.status===0?'#ff9800':r.status===1?'#2196f3':'#4caf50'" style="font-weight:bold">
+              {{r.status===0?'⏳ مفتوح':r.status===1?'📋 مكتمل - جاهز للترحيل':'✅ مرحّل'}}
+            </span>
+          </td></ng-container>
+          <ng-container matColumnDef="actions"><th mat-header-cell *matHeaderCellDef>إجراء</th><td mat-cell *matCellDef="let r">
+            <button mat-flat-button color="primary" *ngIf="r.status===1" (click)="postBilling(r.id)" matTooltip="ترحيل الفوترة وإنشاء القيود المحاسبية">
+              <mat-icon>publish</mat-icon> ترحيل واعتماد
+            </button>
+            <span *ngIf="r.status===2" style="color:#4caf50;font-weight:bold">✅ تم الترحيل</span>
+            <span *ngIf="r.status===0" style="color:#999">بانتظار إكمال الفوترة</span>
+          </td></ng-container>
+          <tr mat-header-row *matHeaderRowDef="['cycleName','period','totalInvoices','totalAmount','status','actions']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['cycleName','period','totalInvoices','totalAmount','status','actions'];"></tr>
+        </table>
+        <p *ngIf="!billingCycles()?.length" style="text-align:center;color:#999;padding:2rem">لا توجد دورات فوترة بعد. اذهب إلى <a routerLink="/electricity/billing">الفوترة</a> لإصدار فوترة جديدة.</p>
+      </mat-card>
     </div>
   `,
-  styles: [
-    electricityPageStyles,
-    `
-      .hero-actions a[mat-flat-button] {
-        background: #ffd54f;
-        color: #102542;
-      }
-    `,
-  ],
+  styles: [electricityPageStyles],
 })
 export class ElectricityPostingComponent implements OnInit {
-  displayedColumns = ['nos', 'dates', 'noa', 'totl', 'sara', 'nok', 'memos'];
-
-  loading = signal(true);
-  rows = signal<LegacyPostingRecord[]>([]);
-
-  constructor(private workflowService: ElectricityWorkflowService) {}
-
-  ngOnInit(): void {
-    this.workflowService.getLegacyPosting(0, 30).subscribe({
-      next: (response) => {
-        this.rows.set(response.data);
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false),
+  billingCycles = signal<any[]>([]);
+  constructor(private svc: ElectricityWorkflowService, private snack: MatSnackBar) {}
+  ngOnInit() { this.loadCycles(); }
+  loadCycles() { this.svc.getBillingCycles().subscribe(r => this.billingCycles.set(r.data || [])); }
+  postBilling(cycleId: number) {
+    this.svc.postBilling({ billingCycleId: cycleId }).subscribe({
+      next: r => { this.snack.open(r.message, 'حسناً', { duration: 3000 }); this.loadCycles(); },
+      error: e => this.snack.open(e.error?.message || 'خطأ', 'حسناً', { duration: 3000 }),
     });
-  }
-
-  totalPosting(): number {
-    return this.rows().reduce((sum, row) => sum + Number(row.totl || 0), 0);
-  }
-
-  totalCash(): number {
-    return this.rows().reduce((sum, row) => sum + Number(row.sara || 0), 0);
-  }
-
-  linkedEntries(): number {
-    return this.rows().filter((row) => !!row.nok || !!row.nokon).length;
-  }
-
-  updatedRows(): number {
-    return this.rows().filter((row) => Number(row.upd || 0) > 0).length;
   }
 }

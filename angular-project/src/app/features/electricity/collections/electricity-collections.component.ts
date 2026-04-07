@@ -1,204 +1,103 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
-import {
-  ElectricityWorkflowService,
-  LegacyCollectionRecord,
-} from '../../../core/services/electricity-workflow.service';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ElectricityWorkflowService } from '../../../core/services/electricity-workflow.service';
 import { electricityPageStyles } from '../electricity-page.styles';
 
 @Component({
   selector: 'app-electricity-collections',
-  imports: [
-    CommonModule,
-    RouterModule,
-    MatButtonModule,
-    MatCardModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatTableModule,
-  ],
+  imports: [CommonModule, FormsModule, RouterModule, MatButtonModule, MatCardModule, MatIconModule, MatTableModule, MatSnackBarModule, MatFormFieldModule, MatInputModule, MatTooltipModule],
   template: `
     <div class="electricity-page" dir="rtl">
       <section class="hero">
         <div class="hero-copy">
-          <span class="hero-kicker">SNDK / SNDKF</span>
-          <h1>التحصيل والسداد المرتبط بالفاتورة</h1>
-          <p>
-            هذه الشاشة تعرض سندات القبض الفعلية المسترجعة من النظام القديم مع تفاصيل
-            السداد التابعة لها، بحيث يظهر الصندوق أو الحساب الرئيسي مع عدد التفاصيل
-            وأول مشترك داخل السند.
-          </p>
+          <span class="hero-kicker">SNDK22 + SNDK / التحصيل والسداد</span>
+          <h1>التحصيل والسداد</h1>
+          <p>البحث عن فواتير المشتركين المستحقة وتسجيل المدفوعات مع تحديث الأرصدة تلقائياً.</p>
           <div class="hero-actions">
-            <a mat-flat-button routerLink="/electricity/posting">الرجوع للترحيل</a>
-            <a mat-stroked-button routerLink="/electricity/messages">فتح الرسائل والمتابعة</a>
+            <a mat-stroked-button routerLink="/electricity/billing"><mat-icon>receipt</mat-icon> الفوترة</a>
+            <a mat-stroked-button routerLink="/electricity/reports"><mat-icon>analytics</mat-icon> التقارير</a>
           </div>
         </div>
-
         <div class="hero-side">
-          <div class="metric-row">
-            <span>عدد السندات</span>
-            <strong>{{ rows().length }}</strong>
-          </div>
-          <div class="metric-row">
-            <span>إجمالي المقبوض</span>
-            <strong>{{ totalCollected() | number:'1.0-2' }}</strong>
-          </div>
-          <div class="metric-row">
-            <span>إجمالي التسوية</span>
-            <strong>{{ totalSettled() | number:'1.0-2' }}</strong>
-          </div>
-          <div class="metric-row">
-            <span>عدد التفاصيل</span>
-            <strong>{{ totalDetails() }}</strong>
-          </div>
+          <div class="metric-row"><span>إجمالي غير المسدد</span><strong style="color:#f44336">{{(billStats()?.totalUnpaid || 0) | number}}</strong></div>
+          <div class="metric-row"><span>فواتير مستحقة</span><strong>{{billStats()?.unpaidInvoices || 0}}</strong></div>
+          <div class="metric-row"><span>نسبة التحصيل</span><strong style="color:#4caf50">{{billStats()?.collectionRate || 0}}%</strong></div>
         </div>
       </section>
 
-      @if (loading()) {
-        <section class="panel empty-state">
-          <mat-spinner diameter="42"></mat-spinner>
-        </section>
-      } @else {
-        <section class="summary-grid">
-          <mat-card class="stat-card">
-            <div class="stat-head">
-              <div>
-                <span>سندات لها بيان</span>
-                <strong>{{ describedCount() }}</strong>
-              </div>
-              <mat-icon>description</mat-icon>
-            </div>
-            <span>السندات التي تحتوي على بيان أو ملاحظة.</span>
-          </mat-card>
-
-          <mat-card class="stat-card">
-            <div class="stat-head">
-              <div>
-                <span>سندات مرحّلة</span>
-                <strong>{{ postedCount() }}</strong>
-              </div>
-              <mat-icon>tag</mat-icon>
-            </div>
-            <span>السندات التي تحمل علم ترحيل أو اعتماد تشغيلي.</span>
-          </mat-card>
-        </section>
-      }
-
-      <section class="panel">
-        <div class="toolbar-row">
-          <div>
-            <h2 class="section-title">
-              <mat-icon>payments</mat-icon>
-              سندات السداد
-            </h2>
-            <p class="muted">هذه البيانات تُقرأ الآن من جداول SNDK و SNDKF المسترجعة من النسخة القديمة.</p>
-          </div>
+      <!-- بحث -->
+      <mat-card style="margin:1rem 0;padding:1.5rem">
+        <div style="display:flex;gap:1rem;align-items:end">
+          <mat-form-field appearance="outline" style="flex:1">
+            <mat-label>بحث برقم المشترك</mat-label>
+            <input matInput type="number" [(ngModel)]="searchNoa" (keyup.enter)="loadUnpaid()" placeholder="أدخل رقم المشترك">
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+          <button mat-flat-button color="primary" (click)="loadUnpaid()"><mat-icon>search</mat-icon> بحث</button>
+          <button mat-stroked-button (click)="searchNoa = undefined; loadUnpaid()"><mat-icon>clear</mat-icon> عرض الكل</button>
         </div>
+      </mat-card>
 
-        @if (!rows().length && !loading()) {
-          <div class="empty-state">لا توجد سندات سداد معروضة.</div>
-        } @else {
-          <div class="table-wrap">
-            <table mat-table [dataSource]="rows()" class="data-table">
-              <ng-container matColumnDef="nos">
-                <th mat-header-cell *matHeaderCellDef>رقم السند</th>
-                <td mat-cell *matCellDef="let row">{{ row.nos || '-' }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="dates">
-                <th mat-header-cell *matHeaderCellDef>التاريخ</th>
-                <td mat-cell *matCellDef="let row">{{ row.dates || '-' }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="noa">
-                <th mat-header-cell *matHeaderCellDef>الحساب الرئيسي</th>
-                <td mat-cell *matCellDef="let row">
-                  <div>{{ row.namea || '-' }}</div>
-                  <small class="muted">رقم {{ row.noa || '-' }}</small>
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="total">
-                <th mat-header-cell *matHeaderCellDef>الإجمالي</th>
-                <td mat-cell *matCellDef="let row" class="amount-positive">
-                  {{ row.total ?? 0 | number:'1.0-2' }}
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="detailCount">
-                <th mat-header-cell *matHeaderCellDef>عدد التفاصيل</th>
-                <td mat-cell *matCellDef="let row">{{ row.detailCount ?? 0 }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="sampleSubscriber">
-                <th mat-header-cell *matHeaderCellDef>أول مشترك</th>
-                <td mat-cell *matCellDef="let row">{{ row.sampleSubscriber || row.nms || '-' }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="memo">
-                <th mat-header-cell *matHeaderCellDef>البيان</th>
-                <td mat-cell *matCellDef="let row">{{ row.memo || row.nms || '-' }}</td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-            </table>
-          </div>
-        }
-      </section>
+      <!-- الفواتير المستحقة -->
+      <mat-card style="margin:1rem 0;padding:1.5rem">
+        <h3><mat-icon>receipt_long</mat-icon> الفواتير المستحقة ({{unpaidInvoices()?.length || 0}} فاتورة - إجمالي: {{totalUnpaid() | number}})</h3>
+        <table mat-table [dataSource]="unpaidInvoices()" style="width:100%">
+          <ng-container matColumnDef="invoiceNo"><th mat-header-cell *matHeaderCellDef>رقم الفاتورة</th><td mat-cell *matCellDef="let r">{{r.invoiceNo}}</td></ng-container>
+          <ng-container matColumnDef="subscriberNoa"><th mat-header-cell *matHeaderCellDef>رقم المشترك</th><td mat-cell *matCellDef="let r">{{r.subscriberNoa}}</td></ng-container>
+          <ng-container matColumnDef="subscriberName"><th mat-header-cell *matHeaderCellDef>الاسم</th><td mat-cell *matCellDef="let r">{{r.subscriberName}}</td></ng-container>
+          <ng-container matColumnDef="invoiceDate"><th mat-header-cell *matHeaderCellDef>التاريخ</th><td mat-cell *matCellDef="let r">{{r.invoiceDate | date:'shortDate'}}</td></ng-container>
+          <ng-container matColumnDef="grandTotal"><th mat-header-cell *matHeaderCellDef>الإجمالي</th><td mat-cell *matCellDef="let r">{{r.grandTotal | number}}</td></ng-container>
+          <ng-container matColumnDef="paidAmount"><th mat-header-cell *matHeaderCellDef>المسدد</th><td mat-cell *matCellDef="let r" style="color:#4caf50">{{r.paidAmount | number}}</td></ng-container>
+          <ng-container matColumnDef="remainingAmount"><th mat-header-cell *matHeaderCellDef>المتبقي</th><td mat-cell *matCellDef="let r" style="color:#f44336;font-weight:bold">{{r.remainingAmount | number}}</td></ng-container>
+          <ng-container matColumnDef="pay"><th mat-header-cell *matHeaderCellDef>سداد</th><td mat-cell *matCellDef="let r">
+            <div style="display:flex;gap:4px;align-items:center">
+              <input type="number" [(ngModel)]="r._payAmount" [placeholder]="r.remainingAmount" style="width:90px;border:1px solid #ccc;border-radius:4px;padding:6px;text-align:center">
+              <button mat-mini-fab color="primary" (click)="payInvoice(r)" matTooltip="تسجيل سداد"><mat-icon>payment</mat-icon></button>
+              <button mat-mini-fab color="accent" (click)="r._payAmount = r.remainingAmount" matTooltip="سداد كامل"><mat-icon>done_all</mat-icon></button>
+            </div>
+          </td></ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+        <p *ngIf="!unpaidInvoices()?.length" style="text-align:center;color:#999;padding:2rem">لا توجد فواتير مستحقة {{searchNoa ? 'لهذا المشترك' : ''}}</p>
+      </mat-card>
     </div>
   `,
-  styles: [
-    electricityPageStyles,
-    `
-      .hero-actions a[mat-flat-button] {
-        background: #ffd54f;
-        color: #102542;
-      }
-    `,
-  ],
+  styles: [electricityPageStyles, `.metric-row { display:flex;justify-content:space-between;padding:0.3rem 0; }`],
 })
 export class ElectricityCollectionsComponent implements OnInit {
-  displayedColumns = ['nos', 'dates', 'noa', 'total', 'detailCount', 'sampleSubscriber', 'memo'];
+  unpaidInvoices = signal<any[]>([]);
+  billStats = signal<any>(null);
+  totalUnpaid = signal(0);
+  searchNoa: number | undefined;
+  displayedColumns = ['invoiceNo','subscriberNoa','subscriberName','invoiceDate','grandTotal','paidAmount','remainingAmount','pay'];
 
-  loading = signal(true);
-  rows = signal<LegacyCollectionRecord[]>([]);
+  constructor(private svc: ElectricityWorkflowService, private snack: MatSnackBar) {}
+  ngOnInit() { this.loadUnpaid(); this.svc.getBillingStats().subscribe(r => this.billStats.set(r.data)); }
 
-  constructor(private workflowService: ElectricityWorkflowService) {}
-
-  ngOnInit(): void {
-    this.workflowService.getLegacyCollections(0, 30).subscribe({
-      next: (response) => {
-        this.rows.set(response.data);
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false),
+  loadUnpaid() {
+    this.svc.getUnpaidInvoices(this.searchNoa).subscribe(r => {
+      this.unpaidInvoices.set((r.data || []).map((x: any) => ({ ...x, _payAmount: null })));
+      this.totalUnpaid.set(r.totalUnpaid || 0);
     });
   }
 
-  totalCollected(): number {
-    return this.rows().reduce((sum, row) => sum + Number(row.total || 0), 0);
-  }
-
-  totalSettled(): number {
-    return this.rows().reduce((sum, row) => sum + Number(row.totalm || 0), 0);
-  }
-
-  totalDetails(): number {
-    return this.rows().reduce((sum, row) => sum + Number(row.detailCount || 0), 0);
-  }
-
-  describedCount(): number {
-    return this.rows().filter((row) => !!row.memo || !!row.nms).length;
-  }
-
-  postedCount(): number {
-    return this.rows().filter((row) => Number(row.ts || 0) > 0).length;
+  payInvoice(inv: any) {
+    const amount = inv._payAmount || inv.remainingAmount;
+    if (!amount || amount <= 0) return;
+    this.svc.recordPayment({ invoiceId: inv.id, amount }).subscribe({
+      next: r => { this.snack.open(r.message, 'حسناً', { duration: 3000 }); this.loadUnpaid(); this.svc.getBillingStats().subscribe(r2 => this.billStats.set(r2.data)); },
+      error: e => this.snack.open(e.error?.message || 'خطأ', 'حسناً', { duration: 3000 }),
+    });
   }
 }
