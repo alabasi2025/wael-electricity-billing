@@ -1,0 +1,5 @@
+userid='/ as sysdba'
+file=D:\alabasi\Wael1\datg\datg\copy\DATASOG.Dmp
+show=y
+full=n
+log=D:\alabasi\Wael1\electricity-system-COMPLETE\nestjs-backend\imp-show.log

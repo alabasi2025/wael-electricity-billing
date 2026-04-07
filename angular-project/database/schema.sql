@@ -1,0 +1,331 @@
+-- =============================================
+-- سكريبت إنشاء قاعدة البيانات
+-- النظام المحاسبي المتخصص لتجار الطاقة الكهربائية
+-- تم استخراجه من تحليل ملفات Oracle Forms (.fmb)
+-- =============================================
+
+-- ─── إعدادات النظام ───
+CREATE TABLE TITL (
+    ID              INT PRIMARY KEY AUTO_INCREMENT,
+    NAME            VARCHAR(200) COMMENT 'اسم الشركة',
+    HSLL            INT COMMENT 'حساب الأرباح والخسائر',
+    NOSMM           INT COMMENT 'رقم سند المقاصة',
+    NOSNDK          INT COMMENT 'رقم السند',
+    MKDM            INT COMMENT 'مقدم',
+    NR              DECIMAL(10,2) COMMENT 'نسبة الربح',
+    MRKSNDK         VARCHAR(50) COMMENT 'مركز السند',
+    SNDKK           INT COMMENT 'نوع السند',
+    NB              INT DEFAULT 0 COMMENT 'حالة النظام',
+    NOCOPY          INT COMMENT 'رقم النسخة',
+    NOCOPY22        INT COMMENT 'نسخة ثانوية',
+    SPATH           VARCHAR(500) COMMENT 'مسار المصدر',
+    PATH            VARCHAR(500) COMMENT 'مسار التنفيذ',
+    AP1             VARCHAR(100) COMMENT 'كلمة سر 1',
+    AP2             VARCHAR(100) COMMENT 'كلمة سر 2',
+    AP3             VARCHAR(100) COMMENT 'كلمة سر 3',
+    MS70            INT DEFAULT 140 COMMENT 'إعدادات العرض',
+    PASHD           VARCHAR(100) COMMENT 'كلمة سر الحذف',
+    DATEHD          DATE COMMENT 'تاريخ الحذف',
+    THDMA           VARCHAR(100) COMMENT 'حد الحذف',
+    TSNK            INT COMMENT 'إعداد السندات'
+);
+
+-- ─── المستخدمين ───
+CREATE TABLE USER_U (
+    NOU             INT PRIMARY KEY COMMENT 'رقم المستخدم',
+    NAMEU           VARCHAR(100) NOT NULL COMMENT 'اسم المستخدم',
+    PASS            VARCHAR(255) NOT NULL COMMENT 'كلمة السر',
+    PASSS           VARCHAR(255) COMMENT 'تأكيد كلمة السر',
+    STATU           INT DEFAULT 1 COMMENT 'الحالة (1=فعال, 0=معطل)',
+    ED              VARCHAR(10) COMMENT 'صلاحية التعديل',
+    DE              VARCHAR(10) COMMENT 'صلاحية الحذف',
+    REPA            VARCHAR(100) COMMENT 'صلاحية التقارير',
+    KOKOGO          INT DEFAULT 0 COMMENT 'إعدادات خاصة',
+    CREATED_AT      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- ─── سجل النظام ───
+CREATE TABLE SYSDATA (
+    ID              INT PRIMARY KEY AUTO_INCREMENT,
+    USER_ID         INT COMMENT 'رقم المستخدم',
+    LOGIN_TIME      VARCHAR(20) COMMENT 'وقت الدخول',
+    LOGIN_DATE      DATE COMMENT 'تاريخ الدخول',
+    USER_NAME       VARCHAR(100) COMMENT 'اسم المستخدم',
+    ACTION          VARCHAR(200) COMMENT 'الإجراء',
+    FOREIGN KEY (USER_ID) REFERENCES USER_U(NOU)
+);
+
+-- ─── دليل الحسابات الرئيسي ───
+CREATE TABLE DATA_A (
+    NO_A            INT PRIMARY KEY COMMENT 'رقم الحساب الرئيسي',
+    NAME_A          VARCHAR(200) NOT NULL COMMENT 'اسم الحساب',
+    REP_A           VARCHAR(100) COMMENT 'التقرير المرتبط',
+    IND             INT COMMENT 'مؤشر',
+    TS              INT DEFAULT 0 COMMENT 'نوع الحساب (0=أصول, 1=خصوم, 2=إيرادات, 3=مصروفات)',
+    TYPEA           INT COMMENT 'تصنيف الحساب'
+);
+
+-- ─── الحسابات الفرعية ───
+CREATE TABLE DATA_AC (
+    NOA             INT PRIMARY KEY COMMENT 'رقم الحساب الفرعي',
+    NAMEA           VARCHAR(200) NOT NULL COMMENT 'اسم الحساب',
+    TYPEA           INT COMMENT 'نوع الحساب (مرتبط بالحساب الرئيسي)',
+    NOAN            INT COMMENT 'الرقم البديل',
+    AMLHH           DECIMAL(15,2) COMMENT 'العمولة',
+    SARAM           INT COMMENT 'السرية',
+    FOREIGN KEY (TYPEA) REFERENCES DATA_A(NO_A)
+);
+
+-- ─── تفاصيل الحسابات ───
+CREATE TABLE DATA_AM (
+    NOA             INT PRIMARY KEY COMMENT 'رقم الحساب',
+    NAMEA           VARCHAR(200) COMMENT 'الاسم',
+    MHLT            VARCHAR(200) COMMENT 'المحلة/العنوان',
+    TEL             VARCHAR(50) COMMENT 'الهاتف',
+    NOTES           TEXT COMMENT 'ملاحظات',
+    FOREIGN KEY (NOA) REFERENCES DATA_AC(NOA)
+);
+
+-- ─── المجموعات ───
+CREATE TABLE GRP (
+    ID              INT PRIMARY KEY AUTO_INCREMENT,
+    NAME            VARCHAR(200) COMMENT 'اسم المجموعة',
+    TYPE            INT COMMENT 'نوع المجموعة'
+);
+
+-- ─── السنوات المالية ───
+CREATE TABLE YEAR (
+    YEAR            INT PRIMARY KEY COMMENT 'السنة',
+    START_DATE      DATE COMMENT 'تاريخ البداية',
+    END_DATE        DATE COMMENT 'تاريخ النهاية',
+    STATUS          INT DEFAULT 1 COMMENT 'الحالة (1=مفتوح, 0=مغلق)',
+    STAT            INT COMMENT 'إعدادات إضافية'
+);
+
+-- ─── الشهور المالية ───
+CREATE TABLE MONTH (
+    NO_M            INT COMMENT 'رقم الشهر',
+    YEAR            INT COMMENT 'السنة',
+    NAME            VARCHAR(50) COMMENT 'اسم الشهر',
+    STATUS          INT DEFAULT 1 COMMENT 'الحالة',
+    OPEN_DATE       DATE COMMENT 'تاريخ الفتح',
+    CLOSE_DATE      DATE COMMENT 'تاريخ الإغلاق',
+    PRIMARY KEY (NO_M, YEAR),
+    FOREIGN KEY (YEAR) REFERENCES YEAR(YEAR)
+);
+
+-- ─── القيود المحاسبية ───
+CREATE TABLE DATAK (
+    NOA             INT COMMENT 'رقم الحساب',
+    DATEMO          DATE NOT NULL COMMENT 'تاريخ القيد',
+    NAMEA           VARCHAR(500) COMMENT 'الوصف',
+    DEBIT           DECIMAL(18,2) DEFAULT 0 COMMENT 'مدين',
+    CREDIT          DECIMAL(18,2) DEFAULT 0 COMMENT 'دائن',
+    NO_M            INT COMMENT 'رقم الشهر',
+    YEAR            INT COMMENT 'السنة المالية',
+    NOTES           TEXT COMMENT 'ملاحظات',
+    USER_ID         INT COMMENT 'المستخدم المدخل',
+    ENTRY_DATE      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (NOA) REFERENCES DATA_AC(NOA)
+);
+
+-- ─── أصناف القيود ───
+CREATE TABLE DATAKSNF (
+    ID              INT PRIMARY KEY AUTO_INCREMENT,
+    NOZ             INT COMMENT 'رقم الصنف',
+    NAME            VARCHAR(200) COMMENT 'اسم الصنف',
+    DATEK           DATE COMMENT 'التاريخ'
+);
+
+-- ─── اليوميات ───
+CREATE TABLE KDAY (
+    ID              INT PRIMARY KEY AUTO_INCREMENT,
+    KDATE           DATE NOT NULL COMMENT 'التاريخ',
+    AMOUNT          DECIMAL(18,2) COMMENT 'المبلغ',
+    TYPE            VARCHAR(50) COMMENT 'النوع',
+    NOTES           TEXT COMMENT 'ملاحظات'
+);
+
+-- ─── سندات القبض ───
+CREATE TABLE SNDK (
+    NOS             INT PRIMARY KEY AUTO_INCREMENT COMMENT 'رقم السند',
+    NOSON           INT COMMENT 'الرقم التسلسلي',
+    DATES           DATE NOT NULL COMMENT 'التاريخ',
+    NOA             INT COMMENT 'رقم الحساب',
+    NAMEA           VARCHAR(200) COMMENT 'اسم الحساب',
+    TOTALS          DECIMAL(18,2) DEFAULT 0 COMMENT 'المجموع',
+    MEMOS           TEXT COMMENT 'البيان',
+    NMS             TEXT COMMENT 'الملاحظات',
+    NOAS            INT COMMENT 'الحساب المقابل',
+    NOK             INT COMMENT 'رقم القيد',
+    NOKON           INT COMMENT 'رقم القيد المقابل',
+    AMR             INT DEFAULT 0 COMMENT 'حالة الترحيل (0=معلق, 1=مرحل)',
+    REP             VARCHAR(100) COMMENT 'التقرير',
+    RSDD            VARCHAR(100) COMMENT 'الرصيد',
+    SDS             VARCHAR(50) COMMENT 'نوع السند',
+    TXTX            TEXT COMMENT 'نص إضافي',
+    NOUSX           INT COMMENT 'المستخدم',
+    FOREIGN KEY (NOA) REFERENCES DATA_AC(NOA)
+);
+
+-- ─── تفاصيل سندات القبض ───
+CREATE TABLE SNDKF (
+    ID              INT PRIMARY KEY AUTO_INCREMENT,
+    NOS_PARENT      INT COMMENT 'رقم السند الأب',
+    NOAF            INT COMMENT 'رقم الحساب الفرعي',
+    NAMEAF          VARCHAR(200) COMMENT 'اسم الحساب',
+    AMOUNT          DECIMAL(18,2) DEFAULT 0 COMMENT 'المبلغ',
+    NOAON           INT COMMENT 'الحساب المقابل',
+    NOTES           TEXT COMMENT 'ملاحظات',
+    FOREIGN KEY (NOS_PARENT) REFERENCES SNDK(NOS),
+    FOREIGN KEY (NOAF) REFERENCES DATA_AC(NOA)
+);
+
+-- ─── سندات الصرف ───
+CREATE TABLE SNDS (
+    NOS             INT PRIMARY KEY AUTO_INCREMENT,
+    NOSON           INT, DATES DATE NOT NULL, NOA INT,
+    NAMEA           VARCHAR(200), TOTALS DECIMAL(18,2) DEFAULT 0,
+    MEMOS           TEXT, AMR INT DEFAULT 0, NOUSX INT,
+    FOREIGN KEY (NOA) REFERENCES DATA_AC(NOA)
+);
+
+CREATE TABLE SNDSF (
+    ID INT PRIMARY KEY AUTO_INCREMENT, NOS_PARENT INT,
+    NOAF INT, NAMEAF VARCHAR(200), AMOUNT DECIMAL(18,2) DEFAULT 0, NOTES TEXT,
+    FOREIGN KEY (NOS_PARENT) REFERENCES SNDS(NOS)
+);
+
+-- ─── سندات يومية ───
+CREATE TABLE SNDKY (
+    NOS INT PRIMARY KEY AUTO_INCREMENT, NOSON INT, DATES DATE NOT NULL,
+    NOA INT, NAMEA VARCHAR(200), TOTALS DECIMAL(18,2) DEFAULT 0, MEMOS TEXT,
+    FOREIGN KEY (NOA) REFERENCES DATA_AC(NOA)
+);
+
+CREATE TABLE SNDKYF (
+    ID INT PRIMARY KEY AUTO_INCREMENT, NOS_PARENT INT,
+    NOAF INT, NAMEAF VARCHAR(200), AMOUNT DECIMAL(18,2) DEFAULT 0, NOTES TEXT,
+    FOREIGN KEY (NOS_PARENT) REFERENCES SNDKY(NOS)
+);
+
+-- ─── سندات أخرى ───
+CREATE TABLE SNDKO (NOS INT PRIMARY KEY AUTO_INCREMENT, NOSON INT, DATES DATE NOT NULL, NOA INT, NAMEA VARCHAR(200), TOTALS DECIMAL(18,2) DEFAULT 0, MEMOS TEXT);
+CREATE TABLE SNDKOF (ID INT PRIMARY KEY AUTO_INCREMENT, NOS_PARENT INT, NOAF INT, NAMEAF VARCHAR(200), AMOUNT DECIMAL(18,2) DEFAULT 0, NOTES TEXT);
+
+-- ─── سندات الشبكة ───
+CREATE TABLE SNDKNET (NOS INT PRIMARY KEY AUTO_INCREMENT, NOSON INT, DATES DATE NOT NULL, NOA INT, NAMEA VARCHAR(200), TOTALS DECIMAL(18,2) DEFAULT 0, MEMOS TEXT);
+CREATE TABLE SNDKNETF (ID INT PRIMARY KEY AUTO_INCREMENT, NOS_PARENT INT, NOAF INT, NAMEAF VARCHAR(200), AMOUNT DECIMAL(18,2) DEFAULT 0, NOTES TEXT);
+
+-- ─── الفواتير - مبيعات ───
+CREATE TABLE FATM (
+    NOS             INT PRIMARY KEY AUTO_INCREMENT COMMENT 'رقم الفاتورة',
+    NOSON           INT COMMENT 'الرقم التسلسلي',
+    DATES           DATE NOT NULL COMMENT 'التاريخ',
+    NOA             INT COMMENT 'رقم الحساب (العميل)',
+    NAMEA           VARCHAR(200) COMMENT 'اسم العميل',
+    TOTALS          DECIMAL(18,2) DEFAULT 0 COMMENT 'المجموع',
+    NOTES           TEXT COMMENT 'ملاحظات',
+    FOREIGN KEY (NOA) REFERENCES DATA_AC(NOA)
+);
+
+CREATE TABLE FATMF (
+    ID INT PRIMARY KEY AUTO_INCREMENT, NOS_PARENT INT,
+    ITEM_NAME VARCHAR(200), QUANTITY DECIMAL(10,2), PRICE DECIMAL(18,2), TOTAL DECIMAL(18,2), NOTES TEXT,
+    FOREIGN KEY (NOS_PARENT) REFERENCES FATM(NOS)
+);
+
+-- ─── الفواتير - مشتريات ───
+CREATE TABLE FATB (
+    NOS INT PRIMARY KEY AUTO_INCREMENT, NOSON INT, DATES DATE NOT NULL,
+    NOA INT, NAMEA VARCHAR(200), TOTALS DECIMAL(18,2) DEFAULT 0, NOTES TEXT,
+    FOREIGN KEY (NOA) REFERENCES DATA_AC(NOA)
+);
+
+CREATE TABLE FATBF (
+    ID INT PRIMARY KEY AUTO_INCREMENT, NOS_PARENT INT,
+    ITEM_NAME VARCHAR(200), QUANTITY DECIMAL(10,2), PRICE DECIMAL(18,2), TOTAL DECIMAL(18,2), NOTES TEXT,
+    FOREIGN KEY (NOS_PARENT) REFERENCES FATB(NOS)
+);
+
+-- ─── الموظفين ───
+CREATE TABLE EMP1 (
+    ID INT PRIMARY KEY AUTO_INCREMENT, NAME VARCHAR(200), DATES DATE, SALARY DECIMAL(18,2),
+    DEPARTMENT VARCHAR(100), PHONE VARCHAR(50), ADDRESS VARCHAR(300), STATUS INT DEFAULT 1, NOTES TEXT
+);
+
+CREATE TABLE EMP2 (
+    ID INT PRIMARY KEY AUTO_INCREMENT, EMP_ID INT, DATES DATE, REASON VARCHAR(300), DURATION INT,
+    FOREIGN KEY (EMP_ID) REFERENCES EMP1(ID)
+);
+
+CREATE TABLE EMPAB1 (ID INT PRIMARY KEY AUTO_INCREMENT, EMP_ID INT, TYPE VARCHAR(50), AMOUNT DECIMAL(18,2), DATES DATE, NOTES TEXT);
+CREATE TABLE EMPAB2 (ID INT PRIMARY KEY AUTO_INCREMENT, EMP_ID INT, TYPE VARCHAR(50), AMOUNT DECIMAL(18,2), DATES DATE, NOTES TEXT);
+
+-- ─── الأمانات ───
+CREATE TABLE AMANDHS (
+    ID INT PRIMARY KEY AUTO_INCREMENT, NOS INT, DATES DATE, NOA INT,
+    NAMEA VARCHAR(200), AMOUNT DECIMAL(18,2), NOTES TEXT, STATUS INT DEFAULT 1,
+    FOREIGN KEY (NOA) REFERENCES DATA_AC(NOA)
+);
+
+-- ─── الأعمال ───
+CREATE TABLE AMLH (ID INT PRIMARY KEY AUTO_INCREMENT, NAME VARCHAR(200), TYPE INT, AMOUNT DECIMAL(18,2), NOTES TEXT);
+
+-- ─── الإقفالات ───
+CREATE TABLE AKFA (ID INT PRIMARY KEY AUTO_INCREMENT, NOM INT, NOY INT, NOD VARCHAR(200), DATES DATE, NO_M INT, YEAR INT, STATUS INT DEFAULT 0);
+CREATE TABLE AKFAF (ID INT PRIMARY KEY AUTO_INCREMENT, AKFA_ID INT, NOA INT, AMOUNT DECIMAL(18,2), TYPE VARCHAR(20));
+
+-- ─── التسويات ───
+CREATE TABLE REDM (ID INT PRIMARY KEY AUTO_INCREMENT, NOS INT, DATES DATE, DATES2 DATE, NOA INT, AMOUNT DECIMAL(18,2), NOTES TEXT);
+CREATE TABLE REDMM (ID INT PRIMARY KEY AUTO_INCREMENT, NOS INT, DATES DATE, DATES2 DATE, NOA INT, AMOUNT DECIMAL(18,2), NOTES TEXT);
+
+-- ─── الأرصدة ───
+CREATE TABLE ARSRF (ID INT PRIMARY KEY AUTO_INCREMENT, NOA INT, DATES DATE, DEBIT DECIMAL(18,2), CREDIT DECIMAL(18,2), BALANCE DECIMAL(18,2));
+CREATE TABLE ARSRFF (ID INT PRIMARY KEY AUTO_INCREMENT, NOA INT, DATES DATE, DEBIT DECIMAL(18,2), CREDIT DECIMAL(18,2), BALANCE DECIMAL(18,2));
+
+-- ─── التركيبات ───
+CREATE TABLE TRKB (ID INT PRIMARY KEY AUTO_INCREMENT, NOS INT, DATES DATE, DESCRIPTION TEXT, AMOUNT DECIMAL(18,2), STATUS INT DEFAULT 1, NOTES TEXT);
+
+-- ─── المولدات ───
+CREATE TABLE MOLDAT (ID INT PRIMARY KEY AUTO_INCREMENT, NAME VARCHAR(200), CAPACITY DECIMAL(10,2), LOCATION VARCHAR(300), STATUS INT DEFAULT 1, NOTES TEXT);
+CREATE TABLE MOLDATS (ID INT PRIMARY KEY AUTO_INCREMENT, NAME VARCHAR(200), CAPACITY DECIMAL(10,2), LOCATION VARCHAR(300), STATUS INT DEFAULT 1, NOTES TEXT);
+
+-- ─── المراكز ───
+CREATE TABLE MRCZE (ID INT PRIMARY KEY AUTO_INCREMENT, NAME VARCHAR(200), LOCATION VARCHAR(300), TYPE VARCHAR(50), STATUS INT DEFAULT 1);
+
+-- ─── العدادات ───
+CREATE TABLE MZ (
+    ID INT PRIMARY KEY AUTO_INCREMENT, METER_NUMBER VARCHAR(50), SUBSCRIBER_NAME VARCHAR(200),
+    LOCATION VARCHAR(300), READING DECIMAL(18,2), LAST_READ_DATE DATE, STATUS INT DEFAULT 1
+);
+
+-- ─── حسم المشتركين ───
+CREATE TABLE HSMMSH (ID INT PRIMARY KEY AUTO_INCREMENT, SUBSCRIBER_ID INT, DATES DATE, AMOUNT DECIMAL(18,2), REASON VARCHAR(300), NOTES TEXT);
+
+-- ─── البيانات المالية ───
+CREATE TABLE DATAF (NOS INT PRIMARY KEY AUTO_INCREMENT, DATES DATE, DATES2 DATE, NOA INT, AMOUNT DECIMAL(18,2), TYPE VARCHAR(50), NOTES TEXT);
+CREATE TABLE DATAFF (ID INT PRIMARY KEY AUTO_INCREMENT, NOS_PARENT INT, NOA INT, AMOUNT DECIMAL(18,2), NOTES TEXT);
+
+-- ─── المذكرات ───
+CREATE TABLE MEMO (ID INT PRIMARY KEY AUTO_INCREMENT, TITLE VARCHAR(300), CONTENT TEXT, DATE_CREATED DATE, USER_ID INT, PRIORITY INT DEFAULT 0);
+
+-- ─── الرسائل النصية ───
+CREATE TABLE SMS_DATA (ID INT PRIMARY KEY AUTO_INCREMENT, PHONE VARCHAR(50), MESSAGE TEXT, SENT_DATE DATETIME, STATUS INT, USER_ID INT);
+
+-- ─── البيانات الإضافية ───
+CREATE TABLE DATAAMR1 (ID INT PRIMARY KEY AUTO_INCREMENT, DATES DATE, DATES2 DATE, NOA INT, AMOUNT DECIMAL(18,2), NOTES TEXT);
+CREATE TABLE DATAAMR2 (ID INT PRIMARY KEY AUTO_INCREMENT, DATES DATE, DATES2 DATE, NOA INT, AMOUNT DECIMAL(18,2), NOTES TEXT);
+CREATE TABLE RSFM (ID INT PRIMARY KEY AUTO_INCREMENT, NOA INT, DATES DATE, BALANCE DECIMAL(18,2));
+
+-- =============================================
+-- بيانات أولية
+-- =============================================
+INSERT INTO USER_U (NOU, NAMEU, PASS, STATU) VALUES (1, 'مدير النظام', 'admin123', 1);
+INSERT INTO YEAR (YEAR, START_DATE, END_DATE, STATUS) VALUES (2026, '2026-01-01', '2026-12-31', 1);
+INSERT INTO DATA_A (NO_A, NAME_A, TS) VALUES 
+  (1, 'الأصول', 0), (2, 'الخصوم', 1), (3, 'حقوق الملكية', 4),
+  (4, 'الإيرادات', 2), (5, 'المصروفات', 3),
+  (6, 'الأصول المتداولة', 0), (7, 'الأصول الثابتة', 0),
+  (8, 'الخصوم المتداولة', 1), (9, 'الخصوم طويلة الأجل', 1);

@@ -1,0 +1,54 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Dependencies
+**/node_modules/
+
+# Environment / secrets
+**/.env
+**/.env.*
+!.env.example
+
+# Logs
+*.log
+**/*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build output
+**/dist/
+**/build/
+**/.angular/
+**/.cache/
+**/coverage/
+
+# Runtime / temp
+**/tmp/
+**/temp/
+**/uploads/
+
+# Databases / local artifacts
+*.db
+*.sqlite
+*.sqlite3
+
+# Backups / generated reports
+nestjs-backend/backups/
+reports/electricity-ui-audit-2026-04-07/
+reports/legacy-clone-table-counts-2026-04-07.csv
+
+# Angular / Nest local runtime files
+angular-project/dev-angular.log
+angular-project/dev-angular.err.log
+nestjs-backend/dev-backend.log
+nestjs-backend/dev-backend.err.log
+
+# Misc generated files
+angular-project/.angular/
+angular-project/dist/
+nestjs-backend/dist/

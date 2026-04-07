@@ -1,0 +1,194 @@
+/* =============================================
+   Global Styles - النظام المحاسبي
+   RTL Support + Arabic Typography
+   ============================================= */
+
+/* ─── CSS Variables ─── */
+:root {
+  --primary: #1a237e;
+  --primary-light: #534bae;
+  --primary-dark: #000051;
+  --accent: #ffd600;
+  --accent-dark: #c7a500;
+  --success: #2e7d32;
+  --danger: #c62828;
+  --warning: #e65100;
+  --info: #01579b;
+  --bg-primary: #f5f7fa;
+  --bg-card: #ffffff;
+  --text-primary: #212121;
+  --text-secondary: #757575;
+  --border: #e0e0e0;
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --radius: 12px;
+}
+
+/* ─── Reset & Base ─── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  direction: rtl;
+  font-family: 'Cairo', 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+/* ─── Arabic Font Import ─── */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
+
+/* ─── Scrollbar Styling ─── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c5cae9;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7986cb;
+}
+
+/* ─── Material Theme Overrides ─── */
+.mat-mdc-card {
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow) !important;
+}
+
+.mat-mdc-raised-button.mat-primary {
+  background-color: var(--primary) !important;
+}
+
+.mat-mdc-form-field {
+  width: 100%;
+}
+
+.mat-mdc-table {
+  width: 100%;
+}
+
+.mat-mdc-header-cell {
+  background: #e8eaf6 !important;
+  color: var(--primary) !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+
+.mat-mdc-row:hover {
+  background: #f5f5f5 !important;
+}
+
+/* ─── RTL Support ─── */
+[dir="rtl"] .mat-mdc-form-field-subscript-wrapper {
+  text-align: right;
+}
+
+[dir="rtl"] .mdc-text-field--outlined .mdc-notched-outline .mdc-notched-outline__leading {
+  border-radius: 0 4px 4px 0;
+}
+
+[dir="rtl"] .mdc-text-field--outlined .mdc-notched-outline .mdc-notched-outline__trailing {
+  border-radius: 4px 0 0 4px;
+}
+
+/* ─── Print Styles ─── */
+@media print {
+  .app-toolbar, .app-sidenav, .action-bar, .header-actions, .nav-buttons {
+    display: none !important;
+  }
+  
+  .main-content {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .mat-mdc-card {
+    box-shadow: none !important;
+    border: 1px solid #ddd;
+  }
+
+  body {
+    direction: rtl;
+    font-size: 12px;
+  }
+}
+
+/* ─── Utility Classes ─── */
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-left { text-align: left; }
+.text-primary { color: var(--primary); }
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }
+.text-warning { color: var(--warning); }
+.fw-bold { font-weight: 700; }
+.fs-small { font-size: 12px; }
+.fs-large { font-size: 18px; }
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mt-3 { margin-top: 24px; }
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.gap-1 { gap: 8px; }
+.gap-2 { gap: 16px; }
+.d-flex { display: flex; }
+.align-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.flex-wrap { flex-wrap: wrap; }
+
+/* ─── Number formatting for amounts ─── */
+.amount-cell {
+  font-weight: 600;
+  font-family: 'Segoe UI', monospace;
+  letter-spacing: 0.5px;
+}
+
+.debit-amount { color: var(--danger); }
+.credit-amount { color: var(--success); }
+.balance-amount { color: var(--primary); }
+
+/* ─── Status badges ─── */
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-active { background: #e8f5e9; color: #2e7d32; }
+.status-inactive { background: #ffebee; color: #c62828; }
+.status-pending { background: #fff3e0; color: #e65100; }
+.status-posted { background: #e3f2fd; color: #1565c0; }
+
+/* ─── Animation Helpers ─── */
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
