@@ -1,1 +1,0 @@
-call jrepl "$^" "" /f "sms.txt"  /o "sms.txt|utf-8"

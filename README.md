@@ -54,7 +54,6 @@ npm run start:dev
 
 ## المرجع القديم
 تمت إضافة ملفات النظام الأول داخل:
-- `legacy-reference/system-1/`
 - `legacy-reference/datg.rar`
 
 هذا القسم مرجعي فقط، ويحتوي على ملفات Oracle Forms/Reports والملفات المساندة للنظام القديم كما كانت، بهدف:
