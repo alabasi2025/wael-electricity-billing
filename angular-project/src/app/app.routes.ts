@@ -430,7 +430,21 @@ export const APP_ROUTES: Routes = [
         path: 'print/:type/:id',
         loadComponent: () => import('./features/print/print.component').then(m => m.PrintComponent),
         data: { title: 'طباعة' }
-      }
+      },
+
+      // ─── المخازن والأمانات ───
+      {
+        path: 'warehouse',
+        loadComponent: () => import('./features/warehouse/warehouse-page.component').then(m => m.WarehousePageComponent),
+        data: { title: 'المخازن والأمانات', icon: 'warehouse' }
+      },
+
+      // ─── سندات الشبكة ───
+      {
+        path: 'network-vouchers',
+        loadComponent: () => import('./features/network-vouchers/network-vouchers-page.component').then(m => m.NetworkVouchersPageComponent),
+        data: { title: 'سندات الشبكة', icon: 'language' }
+      },
     ]
   },
 
