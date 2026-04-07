@@ -1,81 +1,135 @@
-# نظام الفوترة الكهربائية وايل
+# ⚡ نظام الفوترة الكهربائية وايل
 
-نظام فوترة ومحاسبة كهربائية تم نقله من بيئة Oracle Forms القديمة إلى بنية ويب حديثة، مع الحفاظ على دورة العمل الأساسية للنظام القديم: المشتركين، القراءات، الفوترة، الترحيل، التحصيل، الرسائل، والتقارير.
+نظام فوترة ومحاسبة كهربائية **شامل** تم نقله من بيئة Oracle Forms القديمة (247 شاشة + 346 تقرير) إلى بنية ويب حديثة، مع الحفاظ على دورة العمل الكاملة.
 
 ## التقنيات المستخدمة
-- الواجهة الأمامية: Angular 21
-- الواجهة الخلفية: NestJS 10
-- قاعدة البيانات: PostgreSQL
-- مصدر البيانات القديمة: Oracle Export Dumps
+- **الواجهة الأمامية:** Angular 21 + Angular Material
+- **الواجهة الخلفية:** NestJS 10 + TypeORM
+- **قاعدة البيانات:** PostgreSQL
+- **المصدر القديم:** Oracle Forms + Oracle Export Dumps
 
-## هيكل المشروع
-- `angular-project/` تطبيق الواجهة الأمامية
-- `nestjs-backend/` واجهة البرمجة الخلفية وسكربتات الترحيل
-- `reports/` تقارير التدقيق، المراجعة، وملاحظات الترحيل
-- `legacy-reference/system-1/` ملفات النظام الأول القديمة كمرجع فقط
-- `migration-plan-electricity.md` خطة ترحيل وبناء النظام
-
-## الوضع الحالي
-- تم إنشاء مستودع Git وربطه مع GitHub
-- تم ترقية مشروع Angular إلى الإصدار 21
-- تم ربط الـ backend مع PostgreSQL
-- تم استنساخ بيانات النظام القديم من Oracle إلى PostgreSQL
-- تم بناء صفحات أساسية في قسم الكهرباء داخل الواجهة الجديدة
-- الصفحات الجاهزة حاليًا بشكل جيد تشمل: المشتركين، الفوترة، التحصيل، والرسائل
-
-## التشغيل المحلي
-### الواجهة الأمامية
-```bash
-cd angular-project
-npm install
-npm start
+## 🏗️ هيكل المشروع
+```
+wael-electricity-billing/
+├── angular-project/          ← Angular 21 (12 شاشة كهرباء)
+├── nestjs-backend/           ← NestJS 10 (102 API endpoint)
+│   ├── src/electricity/      ← 10 وحدات كهربائية
+│   │   ├── subscribers/      ← المشتركين (48 حقل)
+│   │   ├── meter-readings/   ← القراءات والعدادات
+│   │   ├── billing-engine/   ← الفوترة والترحيل والسداد
+│   │   ├── groups-collectors/ ← المجموعات والمحصلين
+│   │   ├── messaging/        ← الرسائل SMS/WhatsApp
+│   │   ├── reports-engine/   ← 13 تقرير
+│   │   ├── print/            ← طباعة PDF/HTML (5 أنواع)
+│   │   ├── network-vouchers/ ← سندات الشبكة والتسويات
+│   │   └── tariff/           ← التعرفة والشرائح
+│   ├── src/permissions/      ← الأدوار والصلاحيات
+│   └── database/migrations/  ← 6 ملفات هجرة (31 جدول + 5 views)
+├── reports/                  ← تقارير التدقيق
+├── legacy-reference/         ← ملفات Oracle القديمة (مرجع فقط)
+└── migration-plan-electricity.md
 ```
 
-### الواجهة الخلفية
-```bash
-cd nestjs-backend
-npm install
-npm run build
-npm run start:dev
+## 🔄 دورة العمل الكهربائية الكاملة
+```
+تسجيل مشترك → تركيب عداد → إنشاء دورة قراءة → إدخال قراءات
+→ حساب استهلاك (شرائح) → إصدار فاتورة → ترحيل (قيود محاسبية)
+→ تحصيل/سداد → طباعة فاتورة/سند → تقارير → رسائل SMS/WhatsApp
 ```
 
-## الإعدادات
-أنشئ ملف البيئة للواجهة الخلفية بالاعتماد على `.env.example` ثم عدّل إعدادات الاتصال بقاعدة البيانات حسب جهازك.
+## 🌐 نقاط النهاية API (102 endpoint)
 
-روابط التشغيل المحلية المعتادة:
-- الواجهة الأمامية: `http://localhost:4200`
-- الواجهة الخلفية: `http://localhost:3000/api`
-- Swagger: `http://localhost:3000/api/docs`
+### المشتركين `/electricity/subscribers`
+| Method | Path | الوصف |
+|--------|------|-------|
+| GET | /stats | إحصائيات |
+| GET | /quick-search?term= | بحث سريع |
+| GET | /overdue | المتأخرين |
+| POST | / | إنشاء مشترك |
+| GET | /?search=&groupId=&status= | قائمة + بحث |
+| GET | /:noa | مشترك واحد |
+| PUT | /:noa | تحديث |
+| DELETE | /:noa | حذف |
+| PATCH | /:noa/toggle-disconnect | فصل/توصيل |
+| PATCH | /:noa/balance | تحديث رصيد |
 
-## ملاحظات الترحيل من النظام القديم
-المشروع يحتوي على سكربتات لترحيل البيانات القديمة من Oracle إلى PostgreSQL:
-- `nestjs-backend/scripts/migrate-oracle-to-postgres-replace.js`
-- `nestjs-backend/scripts/clone-oracle-full-raw.js`
+### القراءات `/electricity/readings`
+| Method | Path | الوصف |
+|--------|------|-------|
+| POST | /cycles | إنشاء دورة |
+| GET | /cycles | قائمة الدورات |
+| PATCH | /cycles/:id/close | إغلاق دورة |
+| GET | /cycles/:id/readings | قراءات الدورة |
+| POST | /cycles/:id/record | تسجيل قراءة |
+| POST | /cycles/:id/bulk-record | قراءات جماعية |
+| POST | /meter-changes | تغيير عداد |
+| POST | /adjustments | تسوية |
 
-## المرجع القديم
-تمت إضافة ملفات النظام الأول داخل:
-- `legacy-reference/datg.rar`
+### الفوترة `/electricity/billing`
+| Method | Path | الوصف |
+|--------|------|-------|
+| POST | /generate | 🔥 إصدار فوترة شهرية |
+| POST | /post | ✅ ترحيل |
+| POST | /payments | 💰 تسجيل سداد |
+| POST | /tariffs | إنشاء تعرفة |
+| GET | /invoices/unpaid | فواتير مستحقة |
 
-هذا القسم مرجعي فقط، ويحتوي على ملفات Oracle Forms/Reports والملفات المساندة للنظام القديم كما كانت، بهدف:
-- الرجوع إلى الشاشات والتقارير الأصلية أثناء التطوير
-- التحقق من السلوك القديم ومطابقته في النظام الجديد
-- حفظ المصدر التاريخي منفصلًا عن كود التشغيل الحديث
+### الطباعة `/electricity/print`
+| Method | Path | الوصف |
+|--------|------|-------|
+| GET | /invoice/:id | 🖨️ طباعة فاتورة |
+| GET | /receipt/:id?amount= | 🖨️ طباعة سند قبض |
+| GET | /statement/:noa | 🖨️ كشف حساب |
+| GET | /daily-report?date= | 🖨️ تقرير يومي |
+| GET | /monthly-billing?month=&year= | 🖨️ فواتير شهرية |
 
-مهم:
-- هذه الملفات ليست مصدر التشغيل الحالي للنظام الجديد
-- لا يتم تطوير الميزات الجديدة داخلها
-- التنفيذ الفعلي للنظام الجديد يبقى داخل `angular-project/` و`nestjs-backend/`
+### التقارير `/electricity/reports` (13 تقرير)
+### الرسائل `/electricity/messages` (مع SMS Gateway)
+### سندات الشبكة `/electricity/network`
+### الصلاحيات `/permissions`
 
-كما توجد تقارير مساندة داخل:
-- `reports/legacy-clone-audit-2026-04-07.md`
-- `reports/electricity-ui-review-2026-04-07.md`
+## 🚀 التشغيل المحلي
 
-## الهدف النهائي
-إعادة بناء دورة العمل الكهربائية كاملة داخل النظام الجديد:
-- ملف المشترك
-- قراءات العدادات
-- الفوترة الشهرية
-- الترحيل والاعتماد
-- التحصيل والسداد
-- الرسائل والمتابعة
-- تقارير الكهرباء
+```bash
+# الواجهة الأمامية
+cd angular-project && npm install && npm start
+# → http://localhost:4200
+
+# الواجهة الخلفية
+cd nestjs-backend && npm install && npm run build && npm run start:dev
+# → http://localhost:3000/api
+# → Swagger: http://localhost:3000/api/docs
+```
+
+## ⚙️ إعدادات SMS Gateway
+```env
+SMS_PROVIDER=twilio          # twilio / nexmo / local_gateway / mock
+SMS_API_KEY=your_key
+SMS_API_SECRET=your_secret
+WHATSAPP_API_URL=            # اختياري
+WHATSAPP_TOKEN=              # اختياري
+```
+
+## 📊 الإحصائيات
+- **6,528+ سطر كود** جديد
+- **31 جدول** PostgreSQL + **5 Views**
+- **102 نقطة نهاية** API
+- **12 شاشة** Angular مُعاد بناؤها
+- **13 تقرير** + **5 أنواع طباعة**
+- **10 وحدات** Backend
+
+## 🔄 المطابقة مع Oracle Forms القديم
+| Oracle | الجديد | الحالة |
+|--------|--------|--------|
+| tel (48 حقل) | subscribers | ✅ |
+| addmz + REDMZ | meter-readings | ✅ |
+| ftora* + SAR_K | billing-engine | ✅ |
+| thoel | billing-postings | ✅ |
+| SNDK22 | collections + payments | ✅ |
+| sndknet | network-vouchers | ✅ |
+| msm + SENDSMS | messaging + SMS Gateway | ✅ |
+| repkh1 + 12 تقرير | reports-engine | ✅ |
+| Oracle Reports | print module (HTML) | ✅ |
+| PRG/USERGN | permissions | ✅ |
+| GRP/NOMK2 | groups-collectors | ✅ |
+| TSSX/TSSNF | financial-settlements | ✅ |
