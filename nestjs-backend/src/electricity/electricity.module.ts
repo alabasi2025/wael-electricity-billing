@@ -156,6 +156,12 @@ import { MessageTemplateEntity, OutboundMessageEntity, MessagingService, Messagi
 // التقارير
 import { ElectricityReportsService, ElectricityReportsController } from './reports-engine/reports-engine.module';
 
+// الطباعة
+import { PrintService, PrintController } from './print/print.module';
+
+// سندات الشبكة والتسويات
+import { NetworkVoucherEntity, CashboxEntity, VoucherArchiveEntity, FinancialSettlementEntity, NetworkVouchersService, NetworkVouchersController } from './network-vouchers/network-vouchers.module';
+
 // ═══════ MODULE الموحد ═══════
 
 @Module({
@@ -172,6 +178,8 @@ import { ElectricityReportsService, ElectricityReportsController } from './repor
     ElectricityGroupEntity, ElectricityCollectorEntity,
     // الجديد - الرسائل
     MessageTemplateEntity, OutboundMessageEntity,
+    // الجديد - سندات الشبكة والتسويات
+    NetworkVoucherEntity, CashboxEntity, VoucherArchiveEntity, FinancialSettlementEntity,
   ])],
   controllers: [
     LegacyElectricityController,
@@ -181,6 +189,8 @@ import { ElectricityReportsService, ElectricityReportsController } from './repor
     GroupsCollectorsController,
     MessagingController,
     ElectricityReportsController,
+    PrintController,
+    NetworkVouchersController,
   ],
   providers: [
     LegacyElectricityService,
@@ -190,6 +200,8 @@ import { ElectricityReportsService, ElectricityReportsController } from './repor
     GroupsCollectorsService,
     MessagingService,
     ElectricityReportsService,
+    PrintService,
+    NetworkVouchersService,
   ],
   exports: [
     LegacyElectricityService,
@@ -199,6 +211,8 @@ import { ElectricityReportsService, ElectricityReportsController } from './repor
     GroupsCollectorsService,
     MessagingService,
     ElectricityReportsService,
+    PrintService,
+    NetworkVouchersService,
   ],
 })
 export class ElectricityModule {}
