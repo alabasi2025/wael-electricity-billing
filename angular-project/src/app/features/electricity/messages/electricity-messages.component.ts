@@ -1,187 +1,131 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
-import {
-  ElectricityWorkflowService,
-  LegacyMessageRecord,
-} from '../../../core/services/electricity-workflow.service';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatTabsModule } from '@angular/material/tabs';
+import { ElectricityWorkflowService } from '../../../core/services/electricity-workflow.service';
 import { electricityPageStyles } from '../electricity-page.styles';
 
 @Component({
   selector: 'app-electricity-messages',
-  imports: [
-    CommonModule,
-    RouterModule,
-    MatButtonModule,
-    MatCardModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatTableModule,
-  ],
+  imports: [ CommonModule, FormsModule, RouterModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatIconModule, MatInputModule, MatProgressSpinnerModule, MatTableModule, MatSelectModule, MatSnackBarModule, MatTabsModule ],
   template: `
     <div class="electricity-page" dir="rtl">
       <section class="hero">
         <div class="hero-copy">
-          <span class="hero-kicker">REPMSM / MSM</span>
-          <h1>الرسائل والمتابعة الميدانية</h1>
-          <p>
-            تعرض هذه الصفحة المشتركين الذين تُستخدم معهم رسائل التذكير، أرصدتهم،
-            أرقام الهواتف، ونوع قناة الإشعار كما كانت تُدار في النظام القديم.
-          </p>
-          <div class="hero-actions">
-            <a mat-flat-button routerLink="/electricity/collections">العودة إلى السداد</a>
-            <a mat-stroked-button routerLink="/electricity/reports">فتح تقارير الكهرباء</a>
-          </div>
+          <span class="hero-kicker">MSM + SENDSMS / الرسائل والمتابعة</span>
+          <h1>إدارة الرسائل</h1>
+          <p>إرسال رسائل SMS/WhatsApp للمشتركين، إدارة قوالب الرسائل، وعرض سجل الإرسال.</p>
         </div>
-
         <div class="hero-side">
-          <div class="metric-row">
-            <span>سجلات المتابعة</span>
-            <strong>{{ rows().length }}</strong>
-          </div>
-          <div class="metric-row">
-            <span>سجلات بهاتف</span>
-            <strong>{{ withPhoneCount() }}</strong>
-          </div>
-          <div class="metric-row">
-            <span>إجمالي الذمم</span>
-            <strong>{{ totalBalance() | number:'1.0-2' }}</strong>
-          </div>
+          <div class="metric-row"><span>إجمالي المرسلة</span><strong>{{ msgStats()?.sent || 0 }}</strong></div>
+          <div class="metric-row"><span>معلقة</span><strong style="color:#ff9800">{{ msgStats()?.pending || 0 }}</strong></div>
+          <div class="metric-row"><span>فشل</span><strong style="color:#f44336">{{ msgStats()?.failed || 0 }}</strong></div>
+          <div class="metric-row"><span>القوالب</span><strong>{{ msgStats()?.templates || 0 }}</strong></div>
         </div>
       </section>
 
-      @if (loading()) {
-        <section class="panel empty-state">
-          <mat-spinner diameter="42"></mat-spinner>
-        </section>
-      } @else {
-        <section class="summary-grid">
-          <mat-card class="stat-card">
-            <div class="stat-head">
-              <div>
-                <span>رسائل صريحة</span>
-                <strong>{{ customMessageCount() }}</strong>
-              </div>
-              <mat-icon>sms</mat-icon>
+      <mat-tab-group>
+        <!-- إرسال رسالة -->
+        <mat-tab label="📤 إرسال رسالة">
+          <mat-card style="margin:1rem 0;padding:1.5rem">
+            <h3><mat-icon>send</mat-icon> إرسال رسالة لمشترك</h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem">
+              <mat-form-field appearance="outline"><mat-label>رقم المشترك</mat-label><input matInput type="number" [(ngModel)]="sendForm.subscriberNoa"></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>القالب</mat-label>
+                <mat-select [(ngModel)]="sendForm.templateId">
+                  <mat-option [value]="null">بدون قالب</mat-option>
+                  @for(t of templates(); track t.id) { <mat-option [value]="t.id">{{t.name}}</mat-option> }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="span-2"><mat-label>نص مخصص (اختياري)</mat-label><textarea matInput [(ngModel)]="sendForm.customMessage" rows="2"></textarea></mat-form-field>
             </div>
-            <span>عدد السجلات التي تحتوي على نص متابعة.</span>
+            <button mat-flat-button color="primary" (click)="sendMessage()"><mat-icon>send</mat-icon> إرسال</button>
           </mat-card>
+        </mat-tab>
 
-          <mat-card class="stat-card">
-            <div class="stat-head">
-              <div>
-                <span>قنوات معرّفة</span>
-                <strong>{{ typedChannelCount() }}</strong>
-              </div>
-              <mat-icon>alternate_email</mat-icon>
+        <!-- القوالب -->
+        <mat-tab label="📝 القوالب">
+          <mat-card style="margin:1rem 0;padding:1.5rem">
+            <h3><mat-icon>description</mat-icon> قوالب الرسائل</h3>
+            <div *ngFor="let t of templates()" style="border:1px solid #e0e0e0;border-radius:8px;padding:1rem;margin:0.5rem 0">
+              <strong>{{t.name}}</strong> <span style="background:#e3f2fd;padding:2px 8px;border-radius:12px;font-size:0.8rem">{{t.templateType}}</span>
+              <p style="color:#666;margin:0.5rem 0">{{t.content}}</p>
             </div>
-            <span>السجلات التي تحتوي على توصيف قناة أو نوع إشعار.</span>
+            <h4 style="margin-top:1.5rem">إنشاء قالب جديد:</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem">
+              <mat-form-field appearance="outline"><mat-label>الاسم</mat-label><input matInput [(ngModel)]="templateForm.name"></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>النوع</mat-label>
+                <mat-select [(ngModel)]="templateForm.templateType">
+                  <mat-option value="balance">رصيد</mat-option><mat-option value="invoice">فاتورة</mat-option>
+                  <mat-option value="payment">سداد</mat-option><mat-option value="overdue">متأخر</mat-option>
+                  <mat-option value="disconnect">فصل</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="span-2"><mat-label>النص (متغيرات: {name} {noa} {balance} {amount})</mat-label><textarea matInput [(ngModel)]="templateForm.content" rows="2"></textarea></mat-form-field>
+            </div>
+            <button mat-flat-button color="primary" (click)="createTemplate()"><mat-icon>save</mat-icon> حفظ القالب</button>
           </mat-card>
-        </section>
-      }
+        </mat-tab>
 
-      <section class="panel">
-        <div class="toolbar-row">
-          <div>
-            <h2 class="section-title">
-              <mat-icon>contact_phone</mat-icon>
-              قائمة المتابعة
-            </h2>
-            <p class="muted">القائمة مأخوذة من جدول المتابعة المرتبط بالمديونية والرسائل في النظام القديم.</p>
-          </div>
-        </div>
-
-        @if (!rows().length && !loading()) {
-          <div class="empty-state">لا توجد بيانات رسائل للعرض.</div>
-        } @else {
-          <div class="table-wrap">
-            <table mat-table [dataSource]="rows()" class="data-table">
-              <ng-container matColumnDef="noa">
-                <th mat-header-cell *matHeaderCellDef>رقم المشترك</th>
-                <td mat-cell *matCellDef="let row">{{ row.noa || '-' }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="namea">
-                <th mat-header-cell *matHeaderCellDef>الاسم</th>
-                <td mat-cell *matCellDef="let row">{{ row.namea || '-' }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="rsd">
-                <th mat-header-cell *matHeaderCellDef>الرصيد</th>
-                <td mat-cell *matCellDef="let row" [class.amount-negative]="(row.rsd || 0) > 0">
-                  {{ row.rsd ?? 0 }}
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="notms">
-                <th mat-header-cell *matHeaderCellDef>الهاتف</th>
-                <td mat-cell *matCellDef="let row">{{ row.notms || '-' }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="typc">
-                <th mat-header-cell *matHeaderCellDef>القناة</th>
-                <td mat-cell *matCellDef="let row">{{ row.typc || '-' }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="mem">
-                <th mat-header-cell *matHeaderCellDef>نص المتابعة</th>
-                <td mat-cell *matCellDef="let row">{{ row.mem || '-' }}</td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        <!-- السجل -->
+        <mat-tab label="📜 سجل الرسائل">
+          <mat-card style="margin:1rem 0;padding:1.5rem">
+            <h3><mat-icon>history</mat-icon> سجل الرسائل المرسلة</h3>
+            <table mat-table [dataSource]="messages()" style="width:100%">
+              <ng-container matColumnDef="subscriberNoa"><th mat-header-cell *matHeaderCellDef>المشترك</th><td mat-cell *matCellDef="let r">{{r.subscriberNoa}}</td></ng-container>
+              <ng-container matColumnDef="channel"><th mat-header-cell *matHeaderCellDef>القناة</th><td mat-cell *matCellDef="let r">{{r.channel}}</td></ng-container>
+              <ng-container matColumnDef="messageText"><th mat-header-cell *matHeaderCellDef>النص</th><td mat-cell *matCellDef="let r" style="max-width:300px;overflow:hidden;text-overflow:ellipsis">{{r.messageText}}</td></ng-container>
+              <ng-container matColumnDef="status"><th mat-header-cell *matHeaderCellDef>الحالة</th><td mat-cell *matCellDef="let r">
+                <mat-icon [style.color]="r.status===1?'#4caf50':r.status===2?'#f44336':'#ff9800'">{{r.status===1?'check_circle':r.status===2?'error':'schedule'}}</mat-icon>
+              </td></ng-container>
+              <ng-container matColumnDef="createdAt"><th mat-header-cell *matHeaderCellDef>التاريخ</th><td mat-cell *matCellDef="let r">{{r.createdAt | date:'short'}}</td></ng-container>
+              <tr mat-header-row *matHeaderRowDef="['subscriberNoa','channel','messageText','status','createdAt']"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['subscriberNoa','channel','messageText','status','createdAt'];"></tr>
             </table>
-          </div>
-        }
-      </section>
+          </mat-card>
+        </mat-tab>
+      </mat-tab-group>
     </div>
   `,
-  styles: [
-    electricityPageStyles,
-    `
-      .hero-actions a[mat-flat-button] {
-        background: #ffd54f;
-        color: #102542;
-      }
-    `,
-  ],
+  styles: [electricityPageStyles, `.span-2 { grid-column: span 2; } .metric-row { display:flex;justify-content:space-between;padding:0.3rem 0; }`],
 })
 export class ElectricityMessagesComponent implements OnInit {
-  displayedColumns = ['noa', 'namea', 'rsd', 'notms', 'typc', 'mem'];
+  msgStats = signal<any>(null);
+  templates = signal<any[]>([]);
+  messages = signal<any[]>([]);
 
-  loading = signal(true);
-  rows = signal<LegacyMessageRecord[]>([]);
+  sendForm = { subscriberNoa: 0, templateId: null as number|null, customMessage: '' };
+  templateForm = { name: '', templateType: 'balance', content: '' };
 
-  constructor(private workflowService: ElectricityWorkflowService) {}
+  constructor(private svc: ElectricityWorkflowService, private snack: MatSnackBar) {}
+  ngOnInit() { this.loadAll(); }
 
-  ngOnInit(): void {
-    this.workflowService.getLegacyMessages(0, 30).subscribe({
-      next: (response) => {
-        this.rows.set(response.data);
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false),
-    });
+  loadAll() {
+    this.svc.getMessageStats().subscribe(r => this.msgStats.set(r.data));
+    this.svc.getMessageTemplates().subscribe(r => this.templates.set(r.data || []));
+    this.svc.getMessages({ pageSize: 50 }).subscribe(r => this.messages.set(r.data || []));
   }
 
-  withPhoneCount(): number {
-    return this.rows().filter((row) => Number(row.notms || 0) > 0).length;
+  sendMessage() {
+    this.svc.sendMessage(this.sendForm as any).subscribe({ next: r => {
+      this.snack.open(r.message,'حسناً',{duration:3000}); this.loadAll();
+    }, error: e => this.snack.open(e.error?.message||'خطأ','حسناً',{duration:3000}) });
   }
 
-  totalBalance(): number {
-    return this.rows().reduce((sum, row) => sum + Number(row.rsd || 0), 0);
-  }
-
-  customMessageCount(): number {
-    return this.rows().filter((row) => !!row.mem).length;
-  }
-
-  typedChannelCount(): number {
-    return this.rows().filter((row) => !!row.typc).length;
+  createTemplate() {
+    this.svc.createMessageTemplate(this.templateForm).subscribe({ next: r => {
+      this.snack.open(r.message||'تم','حسناً',{duration:3000}); this.loadAll();
+      this.templateForm = { name: '', templateType: 'balance', content: '' };
+    }});
   }
 }
