@@ -147,6 +147,15 @@ import { TariffPlanEntity, TariffTierEntity, BillingCycleEntity, BillingInvoiceE
 import { BillingEngineService } from './billing-engine/billing-engine.service';
 import { BillingEngineController } from './billing-engine/billing-engine.controller';
 
+// المجموعات والمحصلين
+import { ElectricityGroupEntity, ElectricityCollectorEntity, GroupsCollectorsService, GroupsCollectorsController } from './groups-collectors/groups-collectors.module';
+
+// الرسائل
+import { MessageTemplateEntity, OutboundMessageEntity, MessagingService, MessagingController } from './messaging/messaging.module';
+
+// التقارير
+import { ElectricityReportsService, ElectricityReportsController } from './reports-engine/reports-engine.module';
+
 // ═══════ MODULE الموحد ═══════
 
 @Module({
@@ -159,24 +168,37 @@ import { BillingEngineController } from './billing-engine/billing-engine.control
     MeterReadingCycleEntity, MeterReadingEntity, MeterChangeEntity, MeterReadingAdjustmentEntity,
     // الجديد - الفوترة
     TariffPlanEntity, TariffTierEntity, BillingCycleEntity, BillingInvoiceEntity, BillingInvoiceItemEntity, BillingPostingEntity,
+    // الجديد - المجموعات والمحصلين
+    ElectricityGroupEntity, ElectricityCollectorEntity,
+    // الجديد - الرسائل
+    MessageTemplateEntity, OutboundMessageEntity,
   ])],
   controllers: [
     LegacyElectricityController,
     ElectricitySubscribersController,
     MeterReadingsController,
     BillingEngineController,
+    GroupsCollectorsController,
+    MessagingController,
+    ElectricityReportsController,
   ],
   providers: [
     LegacyElectricityService,
     ElectricitySubscribersService,
     MeterReadingsService,
     BillingEngineService,
+    GroupsCollectorsService,
+    MessagingService,
+    ElectricityReportsService,
   ],
   exports: [
     LegacyElectricityService,
     ElectricitySubscribersService,
     MeterReadingsService,
     BillingEngineService,
+    GroupsCollectorsService,
+    MessagingService,
+    ElectricityReportsService,
   ],
 })
 export class ElectricityModule {}
