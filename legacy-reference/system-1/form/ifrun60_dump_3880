@@ -1,0 +1,42 @@
+[10/17/20 11:17:01 ÇáÓÚæÏíÉ - ÇáÊæÞíÊ ÇáÑÓãí]::Client Status [ConnId=0, PID=3880]
+	>> ERROR: Abnormal termination, Error Code: C0000005 ACCESS_VIOLATION
+
+======================= STACK DUMP =======================
+
+Fault address:  00743370 01:000A2370
+Module: D:\form\BIN\PLS805.dll
+
+System Information:
+Operating System: Windows NT Version 6.1 Build 7601 Service Pack 1
+Command line: "D:\form\BIN\ifrun60.EXE" D:\datg\form\STARTr.fmx datasog/datasog
+FORM/BLOCK/FIELD: FTORAALLXS:SAR.NAMEAAA
+Last Trigger: WHEN-NEW-ITEM-INSTANCE - (In Progress)
+Msg: <NULL>
+Last Builtin: GET_ITEM_PROPERTY/FIELD_CHARACTERISTIC - (Successfully Completed)
+
+Registers:
+EAX:00000000
+EBX:06138C50
+ECX:00000000
+EDX:02025A58
+ESI:0018DE28
+EDI:01F958C4
+CS:EIP:0023:00743370
+SS:ESP:002B:0018D118  EBP:0018D138
+DS:002B  ES:002B  FS:0053  GS:002B
+Flags:00010246
+
+
+Call stack:
+Address   Frame
+00743370  0018D138  0001:000A2370 D:\form\BIN\PLS805.dll
+007082B9  0018E2A0  0001:000672B9 D:\form\BIN\PLS805.dll
+67E26797  0018E340  depxcrun
+675CB525  0018E3C0  kohinu
+675CD477  0018E3DC  kohalc
+675CD308  0018E4CC  kohalc
+67F27F56  0018E4D8  sltsmnr
+67F351C5  0018E4F8  ssltssigmask
+5D15C85A  0018E510  simfr
+5D12F57C  0018E638  ipdemf
+

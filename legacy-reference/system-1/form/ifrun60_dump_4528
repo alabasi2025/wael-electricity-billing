@@ -1,0 +1,36 @@
+[04/02/21 15:14:18 ÇáÓÚæÏíÉ - ÇáÊæÞíÊ ÇáÑÓãí]::Client Status [ConnId=0, PID=4528]
+	>> ERROR: Abnormal termination, Error Code: C0000005 ACCESS_VIOLATION
+
+======================= STACK DUMP =======================
+
+Fault address:  67F2E834 01:0002D834
+Module: D:\form\BIN\CORE40.dll
+
+System Information:
+Operating System: Windows NT Version 6.1 Build 7601 Service Pack 1
+Command line: "D:\form\BIN\ifrun60.EXE" D:\datg\form\STARTN.fmx dataso3/dataso3
+FORM/BLOCK/FIELD: SNDK:SNDK.DATES
+Last Trigger: POST-TEXT-ITEM - (Successfully Completed)
+Msg: <NULL>
+Last Builtin: GET_ITEM_PROPERTY/FIELD_CHARACTERISTIC - (Successfully Completed)
+
+Registers:
+EAX:02020000
+EBX:0048EA40
+ECX:00000000
+EDX:0048EA30
+ESI:02020000
+EDI:00490E3C
+CS:EIP:0023:67F2E834
+SS:ESP:002B:0018EEB4  EBP:0018EEC0
+DS:002B  ES:002B  FS:0053  GS:002B
+Flags:00010246
+
+
+Call stack:
+Address   Frame
+67F2E834  0018EEC0  ssltssigmask
+67F351B6  0018EEEC  ssltssigmask
+5D15C85A  004C2A54  simfr
+004C2894  004C2A58  0000:00000000 
+

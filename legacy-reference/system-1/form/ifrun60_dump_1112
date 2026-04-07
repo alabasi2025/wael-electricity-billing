@@ -1,0 +1,37 @@
+[09/19/17 12:57:46 Jerusalem Standard Time]::Client Status [ConnId=0, PID=1112]
+	>> ERROR: Abnormal termination, Error Code: C0000005 ACCESS_VIOLATION
+
+======================= STACK DUMP =======================
+
+Fault address:  004B3370 01:000A2370
+Module: C:\form\BIN\PLS805.dll
+
+System Information:
+Operating System: Windows NT Version 5.1 Build 2600 Service Pack 3
+Command line: "C:\form\BIN\ifrun60.EXE" D:\datg\form\STARTN.fmx datasog/datasog
+FORM/BLOCK/FIELD: MENU:M1.A7
+Last Trigger: PRE-POPUP-MENU - (In Progress)
+Msg: <NULL>
+Last Builtin: SET_MENU_ITEM_PROPERTY - (Successfully Completed)
+
+Registers:
+EAX:00000000
+EBX:02A9C688
+ECX:00000000
+EDX:02A32EFC
+ESI:0012E788
+EDI:02A178F8
+CS:EIP:001B:004B3370
+SS:ESP:0023:0012DA78  EBP:0012DA98
+DS:0023  ES:0023  FS:003B  GS:0000
+Flags:00010246
+
+
+Call stack:
+Address   Frame
+004B3370  0012DA98  0001:000A2370 C:\form\BIN\PLS805.dll
+004782B9  0012EB98  0001:000672B9 C:\form\BIN\PLS805.dll
+0042452A  0012EC00  0001:0001352A C:\form\BIN\PLS805.dll
+67E26797  02A16B04  depxcrun
+02A0DE74  00615AB0  0000:00000000 
+

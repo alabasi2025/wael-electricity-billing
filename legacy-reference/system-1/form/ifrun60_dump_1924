@@ -1,0 +1,40 @@
+[04/02/21 15:15:27 ÇáÓÚæÏíÉ - ÇáÊæÞíÊ ÇáÑÓãí]::Client Status [ConnId=0, PID=1924]
+	>> ERROR: Abnormal termination, Error Code: C0000005 ACCESS_VIOLATION
+
+======================= STACK DUMP =======================
+
+Fault address:  5DF4E931 01:0005D931
+Module: D:\form\BIN\ifr60.dll
+
+System Information:
+Operating System: Windows NT Version 6.1 Build 7601 Service Pack 1
+Command line: "D:\form\BIN\ifrun60.EXE" D:\datg\form\STARTN.fmx dataso3/dataso3
+FORM/BLOCK/FIELD: SNDK:SNDKF.<NULL>
+Last Trigger: ON-ERROR - (Successfully Completed)
+Msg: <NULL>
+Last Builtin: ERROR_CODE - (Successfully Completed)
+
+Registers:
+EAX:06F10048
+EBX:006F32C8
+ECX:001A012E
+EDX:066E2A9C
+ESI:06703000
+EDI:06F305AC
+CS:EIP:0023:5DF4E931
+SS:ESP:002B:0018EE68  EBP:006A0A1C
+DS:002B  ES:002B  FS:0053  GS:002B
+Flags:00010206
+
+
+Call stack:
+Address   Frame
+5DF4E931  0018EEB8  exiterr
+5DF4F357  0018EECC  exiterr
+5DF4F08C  0018EEDC  exiterr
+5DF4E027  0018EEF0  exiterr
+5DF21D00  0018EF00  exiterr
+5DF2E424  0018EF34  exiterr
+5DF2DAEC  0018EF60  exiterr
+5DF1FA03  0018EF88  exiterr
+

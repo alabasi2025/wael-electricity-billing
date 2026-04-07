@@ -1,0 +1,44 @@
+[05/09/23 12:56:53 ÇáÓÚæÏíÉ - ÇáÊæÞíÊ ÇáÑÓãí]::Client Status [ConnId=0, PID=1184]
+	>> ERROR: Abnormal termination, Error Code: C0000005 ACCESS_VIOLATION
+
+======================= STACK DUMP =======================
+
+Fault address:  00A93370 01:000A2370
+Module: D:\form\BIN\PLS805.dll
+
+System Information:
+Operating System: Windows NT Version 6.2 Build 9200 
+Command line: "D:\form\BIN\ifrun60.EXE" D:\datg\form\STARTN.fmx dataso4/dataso4
+FORM/BLOCK/FIELD: DATAKAD:MSS.PR2
+Last Trigger: WHEN-BUTTON-PRESSED - (In Progress)
+Msg: <NULL>
+Last Builtin: FORMS_DDL - (Successfully Completed)
+
+Registers:
+EAX:00000000
+EBX:074D9394
+ECX:00000000
+EDX:0456F0D8
+ESI:0019DE10
+EDI:044D8A34
+CS:EIP:0023:00A93370
+SS:ESP:002B:0019D100  EBP:0019D120
+DS:002B  ES:002B  FS:0053  GS:002B
+Flags:00010246
+
+
+Call stack:
+Address   Frame
+00A93370  0019D120  0001:000A2370 D:\form\BIN\PLS805.dll
+00A582B9  0019E220  0001:000672B9 D:\form\BIN\PLS805.dll
+00A0452A  0019E288  0001:0001352A D:\form\BIN\PLS805.dll
+67E26797  0019E328  depxcrun
+675CB525  0019E3A8  kohinu
+675CD477  0019E3C4  kohalc
+675CD308  0019E450  kohalc
+00A7F380  0019E470  0001:0008E380 D:\form\BIN\PLS805.dll
+00A06ED8  0019E4F8  0001:00015ED8 D:\form\BIN\PLS805.dll
+5D12F57C  0019E568  ipdemf
+67E13A39  0019E57C  deppudsfree
+67E27841  0019E620  depxcnamespaceactive
+

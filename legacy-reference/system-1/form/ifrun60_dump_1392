@@ -1,0 +1,40 @@
+[01/08/19 13:45:19 ÇáÓÚæÏíÉ - ÇáÊæÞíÊ ÇáÑÓãí]::Client Status [ConnId=0, PID=1392]
+	>> ERROR: Abnormal termination, Error Code: C0000005 ACCESS_VIOLATION
+
+======================= STACK DUMP =======================
+
+Fault address:  67238A5F 01:00077A5F
+Module: D:\form\BIN\UIW60.DLL
+
+System Information:
+Operating System: Windows NT Version 6.1 Build 7601 Service Pack 1
+Command line: "D:\form\BIN\ifrun60.EXE" D:\datg\form\STARTN.fmx datasog/datasog
+FORM/BLOCK/FIELD: AKFAL:YEAR.D1
+Last Trigger: Popup Menu - (In Progress)
+Msg: <NULL>
+Last Builtin: SHOW_ALERT - (In Progress)
+
+Registers:
+EAX:0000016A
+EBX:002D7018
+ECX:00000321
+EDX:000001E6
+ESI:00000000
+EDI:0012BBB4
+CS:EIP:001B:67238A5F
+SS:ESP:0023:0012BB34  EBP:0012BB48
+DS:0023  ES:0023  FS:003B  GS:0000
+Flags:00010206
+
+
+Call stack:
+Address   Frame
+67238A5F  0012BB48  uivwfd
+671D76FE  0012BBBC  uidnzMswWndProc
+777DC4E7  0012BCD0  0001:0001B4E7 C:\Windows\system32\USER32.dll
+671DA604  0012BCE8  uiezEnqueueNativeKbdEvent
+67593E25  0012BD0C  kghsmf
+67595B94  0012BD7C  kghalo
+6723E086  0012BD94  uiwnru
+671C477B  0012BDAC  uialru
+

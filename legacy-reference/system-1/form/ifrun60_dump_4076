@@ -1,0 +1,37 @@
+[04/26/18 13:10:44 ÇáÓÚæÏíÉ - ÇáÊæÞíÊ ÇáÑÓãí]::Client Status [ConnId=0, PID=4076]
+	>> ERROR: Abnormal termination, Error Code: C0000005 ACCESS_VIOLATION
+
+======================= STACK DUMP =======================
+
+Fault address:  007E0023 1657C06:0012E5E0
+Module: HÐd
+
+System Information:
+Operating System: Windows NT Version 6.1 Build 7601 Service Pack 1
+Command line: "D:\form\BIN\ifrun60.EXE" D:\datg\form\STARTN.fmx datasog/datasog
+FORM/BLOCK/FIELD: EMP:CONT.NEW
+Last Trigger: KEY-EXIT - (Execution Suspended)
+Msg: <NULL>
+Last Builtin: SET_MENU_ITEM_PROPERTY - (Successfully Completed)
+
+Registers:
+EAX:055FF545
+EBX:058D6FF0
+ECX:00746C74
+EDX:058D6FF0
+ESI:003B80C0
+EDI:00000000
+CS:EIP:001B:007E0023
+SS:ESP:0023:0012F068  EBP:0012F180
+DS:0023  ES:0023  FS:003B  GS:0000
+Flags:00010207
+
+
+Call stack:
+Address   Frame
+007E0023  0012F064  0000:00000000 
+671D9ABD  0012F180  uiezCallVWInstance
+5DF331D9  0012F1B4  exiterr
+5DF1B50E  003B80C0  exiterr
+00310298  003B80C4  0000:00000000 
+

@@ -1,0 +1,46 @@
+[10/07/24 11:58:28 ÇáÓÚæÏíÉ - ÇáÊæÞíÊ ÇáÑÓãí]::Client Status [ConnId=0, PID=12160]
+	>> ERROR: Abnormal termination, Error Code: C0000005 ACCESS_VIOLATION
+
+======================= STACK DUMP =======================
+
+Fault address:  67F2E834 01:0002D834
+Module: D:\form\BIN\CORE40.dll
+
+System Information:
+Operating System: Windows NT Version 6.2 Build 9200 
+Command line: "D:\form\BIN\ifrun60.EXE" D:\datg\form\STARTN.fmx datasoG/datasoG
+FORM/BLOCK/FIELD: SNDK:SNDK.DATES
+Last Trigger: POST-TEXT-ITEM - (Successfully Completed)
+Msg: <NULL>
+Last Builtin: GET_ITEM_PROPERTY/FIELD_CHARACTERISTIC - (Successfully Completed)
+
+Registers:
+EAX:00070012
+EBX:033D09C0
+ECX:00000000
+EDX:033D09B0
+ESI:00070012
+EDI:033D2DBC
+CS:EIP:0023:67F2E834
+SS:ESP:002B:0019EED8  EBP:0019EEE4
+DS:002B  ES:002B  FS:0053  GS:002B
+Flags:00010246
+
+
+Call stack:
+Address   Frame
+67F2E834  0019EEE4  ssltssigmask
+67F351B6  0019EF10  ssltssigmask
+5D15C85A  0019EF28  simfr
+5DF4E246  0019EF44  exiterr
+5DF4EC18  0019EFA4  exiterr
+5DF4F357  0019EFB8  exiterr
+5DF4F08C  0019EFC8  exiterr
+5DF4E027  0019EFDC  exiterr
+5DF21D00  0019EFEC  exiterr
+5DF24933  0019F00C  exiterr
+5DF249B9  0019F030  exiterr
+5DF1EF0B  0019F06C  exiterr
+5DF1E87F  0019F070  exiterr
+5DF1E94E  0019F09C  exiterr
+
