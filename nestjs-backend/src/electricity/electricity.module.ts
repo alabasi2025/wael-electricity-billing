@@ -1,6 +1,6 @@
 // =============================================
-// وحدة الكهرباء الكاملة
-// MZ + TRKB + MOLDAT + MOLDATS + MRCZE + HSMMSH
+// وحدة الكهرباء الرئيسية المُعاد بناؤها
+// تجمع: الكيانات القديمة + المشتركين + القراءات + الفوترة
 // =============================================
 import { Injectable, NotFoundException, Module, Controller,
   Get, Post, Put, Delete, Patch, Body, Param, Query, ParseIntPipe, UseGuards } from '@nestjs/common';
@@ -12,7 +12,7 @@ import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-// ═══════ ENTITIES ═══════
+// ═══════ ENTITIES القديمة (MZ, TRKB, MOLDAT, MOLDATS, MRCZE, HSMMSH) ═══════
 
 @Entity('mz') export class MeterEntity {
   @PrimaryGeneratedColumn() id: number;
@@ -75,9 +75,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
   @Column({ type: 'text', nullable: true }) notes: string;
 }
 
-// ═══════ SERVICE ═══════
+// ═══════ SERVICE القديم ═══════
 
-@Injectable() class ElectricityService {
+@Injectable() class LegacyElectricityService {
   constructor(
     @InjectRepository(MeterEntity) private readonly meterRepo: Repository<MeterEntity>,
     @InjectRepository(InstallationEntity) private readonly installRepo: Repository<InstallationEntity>,
@@ -86,92 +86,97 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
     @InjectRepository(CenterEntity) private readonly centerRepo: Repository<CenterEntity>,
     @InjectRepository(SubscriberDiscountEntity) private readonly discountRepo: Repository<SubscriberDiscountEntity>,
   ) {}
-
-  // العدادات
   async createMeter(dto: any) { return { data: await this.meterRepo.save(this.meterRepo.create(dto)), message: 'تم إنشاء العداد' }; }
-  async findAllMeters(p: PaginationDto) {
-    const qb = this.meterRepo.createQueryBuilder('m');
-    if (p.search) qb.where('m.subscriberName LIKE :s OR m.meterNumber LIKE :s', { s: `%${p.search}%` });
-    qb.orderBy('m.id', 'ASC').skip(p.skip).take(p.pageSize);
-    const [data, tc] = await qb.getManyAndCount();
-    return { data, totalCount: tc, page: p.page, pageSize: p.pageSize };
-  }
+  async findAllMeters(p: PaginationDto) { const qb = this.meterRepo.createQueryBuilder('m'); if (p.search) qb.where('m.subscriberName LIKE :s OR m.meterNumber LIKE :s', { s: `%${p.search}%` }); qb.orderBy('m.id', 'ASC').skip(p.skip).take(p.pageSize); const [data, tc] = await qb.getManyAndCount(); return { data, totalCount: tc, page: p.page, pageSize: p.pageSize }; }
   async findOneMeter(id: number) { const m = await this.meterRepo.findOne({ where: { id } }); if (!m) throw new NotFoundException('العداد غير موجود'); return { data: m }; }
   async updateMeter(id: number, dto: any) { const m = await this.meterRepo.findOne({ where: { id } }); if (!m) throw new NotFoundException('العداد غير موجود'); Object.assign(m, dto); return { data: await this.meterRepo.save(m) }; }
-  async recordReading(id: number, reading: number) {
-    const m = await this.meterRepo.findOne({ where: { id } }); if (!m) throw new NotFoundException('العداد غير موجود');
-    m.prevReading = m.reading; m.reading = reading; m.lastReadDate = new Date();
-    const consumption = reading - (+m.prevReading || 0);
-    await this.meterRepo.save(m);
-    return { data: { ...m, consumption }, message: `تم تسجيل القراءة. الاستهلاك: ${consumption}` };
-  }
-
-  // التركيبات
+  async recordReading(id: number, reading: number) { const m = await this.meterRepo.findOne({ where: { id } }); if (!m) throw new NotFoundException('العداد غير موجود'); m.prevReading = m.reading; m.reading = reading; m.lastReadDate = new Date(); const consumption = reading - (+m.prevReading || 0); await this.meterRepo.save(m); return { data: { ...m, consumption }, message: `تم تسجيل القراءة. الاستهلاك: ${consumption}` }; }
   async createInstall(dto: any) { return { data: await this.installRepo.save(this.installRepo.create(dto)), message: 'تم' }; }
   async findAllInstalls(p: PaginationDto) { const [data, tc] = await this.installRepo.findAndCount({ order: { id: 'DESC' }, skip: p.skip, take: p.pageSize }); return { data, totalCount: tc }; }
   async updateInstall(id: number, dto: any) { const e = await this.installRepo.findOne({ where: { id } }); if (!e) throw new NotFoundException('غير موجود'); Object.assign(e, dto); return { data: await this.installRepo.save(e) }; }
-
-  // المولدات
   async createGen(dto: any) { return { data: await this.genRepo.save(this.genRepo.create(dto)), message: 'تم' }; }
   async findAllGens(p: PaginationDto) { const [data, tc] = await this.genRepo.findAndCount({ order: { id: 'ASC' }, skip: p.skip, take: p.pageSize }); return { data, totalCount: tc }; }
   async updateGen(id: number, dto: any) { const e = await this.genRepo.findOne({ where: { id } }); if (!e) throw new NotFoundException('غير موجود'); Object.assign(e, dto); return { data: await this.genRepo.save(e) }; }
-
-  // جداول المولدات
   async createGenSched(dto: any) { return { data: await this.genSchedRepo.save(this.genSchedRepo.create(dto)) }; }
   async findAllGenScheds() { return { data: await this.genSchedRepo.find() }; }
-
-  // المراكز
   async createCenter(dto: any) { return { data: await this.centerRepo.save(this.centerRepo.create(dto)), message: 'تم' }; }
   async findAllCenters() { return { data: await this.centerRepo.find({ order: { id: 'ASC' } }) }; }
   async updateCenter(id: number, dto: any) { const e = await this.centerRepo.findOne({ where: { id } }); if (!e) throw new NotFoundException('غير موجود'); Object.assign(e, dto); return { data: await this.centerRepo.save(e) }; }
-
-  // حسم المشتركين
   async createDiscount(dto: any) { return { data: await this.discountRepo.save(this.discountRepo.create(dto)), message: 'تم' }; }
   async findAllDiscounts(p: PaginationDto) { const [data, tc] = await this.discountRepo.findAndCount({ order: { id: 'DESC' }, skip: p.skip, take: p.pageSize }); return { data, totalCount: tc }; }
-
-  // إحصائيات
-  async getStats() {
-    const meters = await this.meterRepo.count(); const activeMeters = await this.meterRepo.count({ where: { status: 1 } });
-    const installs = await this.installRepo.count(); const gens = await this.genRepo.count();
-    const centers = await this.centerRepo.count();
-    return { data: { meters, activeMeters, installations: installs, generators: gens, centers } };
-  }
+  async getStats() { const meters = await this.meterRepo.count(); const activeMeters = await this.meterRepo.count({ where: { status: 1 } }); const installs = await this.installRepo.count(); const gens = await this.genRepo.count(); const centers = await this.centerRepo.count(); return { data: { meters, activeMeters, installations: installs, generators: gens, centers } }; }
 }
 
-// ═══════ CONTROLLER ═══════
+// ═══════ CONTROLLER القديم ═══════
 
 @ApiTags('electricity') @ApiBearerAuth('JWT-auth') @UseGuards(JwtAuthGuard) @Controller('electricity')
-class ElectricityController {
-  constructor(private readonly svc: ElectricityService) {}
-  @Get('stats') @ApiOperation({ summary: 'إحصائيات الكهرباء' }) getStats() { return this.svc.getStats(); }
-  // العدادات
+class LegacyElectricityController {
+  constructor(private readonly svc: LegacyElectricityService) {}
+  @Get('stats') @ApiOperation({ summary: 'إحصائيات الكهرباء (القديمة)' }) getStats() { return this.svc.getStats(); }
   @Post('meters') @ApiOperation({ summary: 'إنشاء عداد (MZ)' }) createMeter(@Body() dto: any) { return this.svc.createMeter(dto); }
   @Get('meters') @ApiOperation({ summary: 'قائمة العدادات' }) findAllMeters(@Query() p: PaginationDto) { return this.svc.findAllMeters(p); }
   @Get('meters/:id') findOneMeter(@Param('id', ParseIntPipe) id: number) { return this.svc.findOneMeter(id); }
   @Put('meters/:id') @ApiOperation({ summary: 'تحديث عداد' }) updateMeter(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.svc.updateMeter(id, dto); }
   @Patch('meters/:id/reading') @ApiOperation({ summary: 'تسجيل قراءة عداد' }) recordReading(@Param('id', ParseIntPipe) id: number, @Body('reading') reading: number) { return this.svc.recordReading(id, reading); }
-  // التركيبات
   @Post('installations') @ApiOperation({ summary: 'إنشاء تركيب (TRKB)' }) createInstall(@Body() dto: any) { return this.svc.createInstall(dto); }
   @Get('installations') @ApiOperation({ summary: 'قائمة التركيبات' }) findAllInstalls(@Query() p: PaginationDto) { return this.svc.findAllInstalls(p); }
   @Put('installations/:id') updateInstall(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.svc.updateInstall(id, dto); }
-  // المولدات
   @Post('generators') @ApiOperation({ summary: 'إنشاء مولد (MOLDAT)' }) createGen(@Body() dto: any) { return this.svc.createGen(dto); }
   @Get('generators') @ApiOperation({ summary: 'قائمة المولدات' }) findAllGens(@Query() p: PaginationDto) { return this.svc.findAllGens(p); }
   @Put('generators/:id') updateGen(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.svc.updateGen(id, dto); }
-  // جداول المولدات
   @Post('generator-schedules') @ApiOperation({ summary: 'جدول مولد (MOLDATS)' }) createGenSched(@Body() dto: any) { return this.svc.createGenSched(dto); }
   @Get('generator-schedules') findAllGenScheds() { return this.svc.findAllGenScheds(); }
-  // المراكز
   @Post('centers') @ApiOperation({ summary: 'إنشاء مركز (MRCZE)' }) createCenter(@Body() dto: any) { return this.svc.createCenter(dto); }
   @Get('centers') @ApiOperation({ summary: 'قائمة المراكز' }) findAllCenters() { return this.svc.findAllCenters(); }
   @Put('centers/:id') updateCenter(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.svc.updateCenter(id, dto); }
-  // حسم المشتركين
   @Post('discounts') @ApiOperation({ summary: 'حسم مشترك (HSMMSH)' }) createDiscount(@Body() dto: any) { return this.svc.createDiscount(dto); }
   @Get('discounts') @ApiOperation({ summary: 'قائمة الحسومات' }) findAllDiscounts(@Query() p: PaginationDto) { return this.svc.findAllDiscounts(p); }
 }
 
+// ═══════ الوحدات الجديدة (الاستيرادات) ═══════
+
+import { ElectricitySubscriberEntity } from './subscribers/entities/electricity-subscriber.entity';
+import { ElectricitySubscribersService } from './subscribers/subscribers.service';
+import { ElectricitySubscribersController } from './subscribers/subscribers.controller';
+
+import { MeterReadingCycleEntity, MeterReadingEntity, MeterChangeEntity, MeterReadingAdjustmentEntity } from './meter-readings/entities/meter-reading.entity';
+import { MeterReadingsService } from './meter-readings/meter-readings.service';
+import { MeterReadingsController } from './meter-readings/meter-readings.controller';
+
+import { TariffPlanEntity, TariffTierEntity, BillingCycleEntity, BillingInvoiceEntity, BillingInvoiceItemEntity, BillingPostingEntity } from './billing-engine/entities/billing.entity';
+import { BillingEngineService } from './billing-engine/billing-engine.service';
+import { BillingEngineController } from './billing-engine/billing-engine.controller';
+
+// ═══════ MODULE الموحد ═══════
+
 @Module({
-  imports: [TypeOrmModule.forFeature([MeterEntity, InstallationEntity, GeneratorEntity, GeneratorScheduleEntity, CenterEntity, SubscriberDiscountEntity])],
-  controllers: [ElectricityController], providers: [ElectricityService], exports: [ElectricityService],
+  imports: [TypeOrmModule.forFeature([
+    // القديم
+    MeterEntity, InstallationEntity, GeneratorEntity, GeneratorScheduleEntity, CenterEntity, SubscriberDiscountEntity,
+    // الجديد - المشتركين
+    ElectricitySubscriberEntity,
+    // الجديد - القراءات
+    MeterReadingCycleEntity, MeterReadingEntity, MeterChangeEntity, MeterReadingAdjustmentEntity,
+    // الجديد - الفوترة
+    TariffPlanEntity, TariffTierEntity, BillingCycleEntity, BillingInvoiceEntity, BillingInvoiceItemEntity, BillingPostingEntity,
+  ])],
+  controllers: [
+    LegacyElectricityController,
+    ElectricitySubscribersController,
+    MeterReadingsController,
+    BillingEngineController,
+  ],
+  providers: [
+    LegacyElectricityService,
+    ElectricitySubscribersService,
+    MeterReadingsService,
+    BillingEngineService,
+  ],
+  exports: [
+    LegacyElectricityService,
+    ElectricitySubscribersService,
+    MeterReadingsService,
+    BillingEngineService,
+  ],
 })
 export class ElectricityModule {}
