@@ -445,6 +445,13 @@ export const APP_ROUTES: Routes = [
         loadComponent: () => import('./features/network-vouchers/network-vouchers-page.component').then(m => m.NetworkVouchersPageComponent),
         data: { title: 'سندات الشبكة', icon: 'language' }
       },
+
+      // ─── المحاسبة الكهربائية ───
+      {
+        path: 'accounting',
+        loadComponent: () => import('./features/accounting/accounting-page.component').then(m => m.AccountingPageComponent),
+        data: { title: 'المحاسبة الكهربائية', icon: 'calculate' }
+      },
     ]
   },
 
