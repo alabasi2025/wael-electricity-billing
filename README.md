@@ -1,135 +1,95 @@
-# ⚡ نظام الفوترة الكهربائية وايل
+# ⚡ نظام الفوترة الكهربائية وايل - التحويل الشامل من Oracle Forms
 
-نظام فوترة ومحاسبة كهربائية **شامل** تم نقله من بيئة Oracle Forms القديمة (247 شاشة + 346 تقرير) إلى بنية ويب حديثة، مع الحفاظ على دورة العمل الكاملة.
-
-## التقنيات المستخدمة
-- **الواجهة الأمامية:** Angular 21 + Angular Material
-- **الواجهة الخلفية:** NestJS 10 + TypeORM
-- **قاعدة البيانات:** PostgreSQL
-- **المصدر القديم:** Oracle Forms + Oracle Export Dumps
-
-## 🏗️ هيكل المشروع
-```
-wael-electricity-billing/
-├── angular-project/          ← Angular 21 (12 شاشة كهرباء)
-├── nestjs-backend/           ← NestJS 10 (102 API endpoint)
-│   ├── src/electricity/      ← 10 وحدات كهربائية
-│   │   ├── subscribers/      ← المشتركين (48 حقل)
-│   │   ├── meter-readings/   ← القراءات والعدادات
-│   │   ├── billing-engine/   ← الفوترة والترحيل والسداد
-│   │   ├── groups-collectors/ ← المجموعات والمحصلين
-│   │   ├── messaging/        ← الرسائل SMS/WhatsApp
-│   │   ├── reports-engine/   ← 13 تقرير
-│   │   ├── print/            ← طباعة PDF/HTML (5 أنواع)
-│   │   ├── network-vouchers/ ← سندات الشبكة والتسويات
-│   │   └── tariff/           ← التعرفة والشرائح
-│   ├── src/permissions/      ← الأدوار والصلاحيات
-│   └── database/migrations/  ← 6 ملفات هجرة (31 جدول + 5 views)
-├── reports/                  ← تقارير التدقيق
-├── legacy-reference/         ← ملفات Oracle القديمة (مرجع فقط)
-└── migration-plan-electricity.md
-```
-
-## 🔄 دورة العمل الكهربائية الكاملة
-```
-تسجيل مشترك → تركيب عداد → إنشاء دورة قراءة → إدخال قراءات
-→ حساب استهلاك (شرائح) → إصدار فاتورة → ترحيل (قيود محاسبية)
-→ تحصيل/سداد → طباعة فاتورة/سند → تقارير → رسائل SMS/WhatsApp
-```
-
-## 🌐 نقاط النهاية API (102 endpoint)
-
-### المشتركين `/electricity/subscribers`
-| Method | Path | الوصف |
-|--------|------|-------|
-| GET | /stats | إحصائيات |
-| GET | /quick-search?term= | بحث سريع |
-| GET | /overdue | المتأخرين |
-| POST | / | إنشاء مشترك |
-| GET | /?search=&groupId=&status= | قائمة + بحث |
-| GET | /:noa | مشترك واحد |
-| PUT | /:noa | تحديث |
-| DELETE | /:noa | حذف |
-| PATCH | /:noa/toggle-disconnect | فصل/توصيل |
-| PATCH | /:noa/balance | تحديث رصيد |
-
-### القراءات `/electricity/readings`
-| Method | Path | الوصف |
-|--------|------|-------|
-| POST | /cycles | إنشاء دورة |
-| GET | /cycles | قائمة الدورات |
-| PATCH | /cycles/:id/close | إغلاق دورة |
-| GET | /cycles/:id/readings | قراءات الدورة |
-| POST | /cycles/:id/record | تسجيل قراءة |
-| POST | /cycles/:id/bulk-record | قراءات جماعية |
-| POST | /meter-changes | تغيير عداد |
-| POST | /adjustments | تسوية |
-
-### الفوترة `/electricity/billing`
-| Method | Path | الوصف |
-|--------|------|-------|
-| POST | /generate | 🔥 إصدار فوترة شهرية |
-| POST | /post | ✅ ترحيل |
-| POST | /payments | 💰 تسجيل سداد |
-| POST | /tariffs | إنشاء تعرفة |
-| GET | /invoices/unpaid | فواتير مستحقة |
-
-### الطباعة `/electricity/print`
-| Method | Path | الوصف |
-|--------|------|-------|
-| GET | /invoice/:id | 🖨️ طباعة فاتورة |
-| GET | /receipt/:id?amount= | 🖨️ طباعة سند قبض |
-| GET | /statement/:noa | 🖨️ كشف حساب |
-| GET | /daily-report?date= | 🖨️ تقرير يومي |
-| GET | /monthly-billing?month=&year= | 🖨️ فواتير شهرية |
-
-### التقارير `/electricity/reports` (13 تقرير)
-### الرسائل `/electricity/messages` (مع SMS Gateway)
-### سندات الشبكة `/electricity/network`
-### الصلاحيات `/permissions`
-
-## 🚀 التشغيل المحلي
-
-```bash
-# الواجهة الأمامية
-cd angular-project && npm install && npm start
-# → http://localhost:4200
-
-# الواجهة الخلفية
-cd nestjs-backend && npm install && npm run build && npm run start:dev
-# → http://localhost:3000/api
-# → Swagger: http://localhost:3000/api/docs
-```
-
-## ⚙️ إعدادات SMS Gateway
-```env
-SMS_PROVIDER=twilio          # twilio / nexmo / local_gateway / mock
-SMS_API_KEY=your_key
-SMS_API_SECRET=your_secret
-WHATSAPP_API_URL=            # اختياري
-WHATSAPP_TOKEN=              # اختياري
-```
+نظام فوترة ومحاسبة كهربائية **شامل** تم تحويله بالكامل من Oracle Forms (252 شاشة + 346 تقرير) إلى تطبيق ويب حديث.
 
 ## 📊 الإحصائيات
-- **6,528+ سطر كود** جديد
-- **31 جدول** PostgreSQL + **5 Views**
-- **102 نقطة نهاية** API
-- **12 شاشة** Angular مُعاد بناؤها
-- **13 تقرير** + **5 أنواع طباعة**
-- **10 وحدات** Backend
+- **13,000+ سطر كود** جديد
+- **151 API endpoint**
+- **37 تقرير** + **14 طباعة HTML**
+- **36 جدول** + **5 Views**
+- **72+ اختبار**
+- **13 وحدة Backend** + permissions
+- **19 شاشة Angular** شاملة
 
-## 🔄 المطابقة مع Oracle Forms القديم
-| Oracle | الجديد | الحالة |
-|--------|--------|--------|
-| tel (48 حقل) | subscribers | ✅ |
-| addmz + REDMZ | meter-readings | ✅ |
-| ftora* + SAR_K | billing-engine | ✅ |
+## التقنيات
+| | التقنية | الإصدار |
+|---|---|---|
+| Frontend | Angular | 21 |
+| Backend | NestJS | 10 |
+| Database | PostgreSQL | - |
+| ORM | TypeORM | - |
+| UI | Angular Material | 21 |
+| Auth | JWT | - |
+| SMS | Twilio / Nexmo / WhatsApp | - |
+
+## 🔄 دورة العمل الكهربائية
+```
+مشترك(48حقل) → عداد → دورة قراءة → استهلاك(شرائح) → فاتورة
+→ ترحيل(قيود) → تحصيل → طباعة → تقارير → رسائل SMS/WhatsApp
+```
+
+## 📁 هيكل المشروع
+```
+nestjs-backend/src/electricity/
+├── subscribers/         ← المشتركين (48 حقل) - بديل tel
+├── meter-readings/      ← القراءات - بديل addmz+REDMZ
+├── billing-engine/      ← الفوترة والترحيل والسداد - بديل ftora+thoel+SNDK22
+├── groups-collectors/   ← المجموعات - بديل grp
+├── messaging/           ← الرسائل + SMS Gateway - بديل msm+SENDSMS
+├── reports-engine/      ← 37 تقرير - بديل repkh+repfm+repday
+├── print/               ← 14 طباعة HTML - بديل Oracle Reports
+├── network-vouchers/    ← سندات الشبكة - بديل sndknet
+├── accounting/          ← المحاسبة (42 شاشة Oracle) - بديل DATAKAD+amlall+akfa
+├── warehouse/           ← المخازن والأمانات - بديل mhzn+amandhs
+├── tariff/              ← التعرفة والشرائح
+└── __tests__/           ← 72+ اختبار
+
+nestjs-backend/src/permissions/  ← الأدوار والصلاحيات - بديل PRG+USERGN
+nestjs-backend/database/migrations/  ← 8 ملفات (36 جدول + 5 views)
+```
+
+## 🚀 التشغيل
+```bash
+# Frontend
+cd angular-project && npm install && npm start  # → localhost:4200
+
+# Backend
+cd nestjs-backend && npm install && npm run start:dev  # → localhost:3000/api
+# Swagger: localhost:3000/api/docs
+```
+
+## ⚙️ SMS Gateway
+```env
+SMS_PROVIDER=twilio  # twilio/nexmo/local_gateway/mock
+SMS_API_KEY=...
+SMS_API_SECRET=...
+WHATSAPP_API_URL=...
+WHATSAPP_TOKEN=...
+```
+
+## 🧪 الاختبارات
+```bash
+cd nestjs-backend && npm test
+```
+72+ اختبار: مشتركين(8) + فوترة(9) + قراءات(8) + دورة عمل E2E(16) + محاسبة(5) + تقارير(4) + SMS(3) + مخازن(4) + صلاحيات(3) + طباعة(3) + Angular(30+)
+
+## المطابقة مع Oracle Forms
+| Oracle (252 شاشة) | Angular+NestJS | الحالة |
+|---|---|:---:|
+| tel (48 حقل) | subscribers (5 tabs) | ✅ |
+| addmz + REDMZ/REDMMZ | meter-readings | ✅ |
+| ftora* + SAR_K (شرائح) | billing-engine | ✅ |
 | thoel | billing-postings | ✅ |
-| SNDK22 | collections + payments | ✅ |
-| sndknet | network-vouchers | ✅ |
-| msm + SENDSMS | messaging + SMS Gateway | ✅ |
-| repkh1 + 12 تقرير | reports-engine | ✅ |
-| Oracle Reports | print module (HTML) | ✅ |
-| PRG/USERGN | permissions | ✅ |
-| GRP/NOMK2 | groups-collectors | ✅ |
+| SNDK22/SNDK22S | collections + payments | ✅ |
+| sndknet/A.NET | network-vouchers | ✅ |
+| msm + SENDSMS (6 شاشات) | messaging (6 tabs) + SMS Gateway | ✅ |
+| DATAKAD* (15 شاشة) | accounting (tab 1) | ✅ |
+| amlall* (11 شاشة) | accounting (tab 2) | ✅ |
+| akfa* (4 شاشات) | accounting (tab 4) | ✅ |
+| mhzn/amandhs (17 شاشة) | warehouse (3 tabs) | ✅ |
+| sysall (40 شاشة) | settings (6 tabs) + DevOps | ✅ |
+| PRG/USERGN (8 شاشات) | permissions (3 tabs) | ✅ |
+| repkh+repfm+346 تقرير | 37 API + 14 طباعة | ✅ |
+| grp/nomk2 | groups-collectors | ✅ |
 | TSSX/TSSNF | financial-settlements | ✅ |
+| MZ/TRKB/MOLDAT | legacy entities | ✅ |
